@@ -36,3 +36,4 @@ $$;
 
 revoke all on function public.username_available(text), public.email_for_username(text) from public;
 grant execute on function public.username_available(text), public.email_for_username(text) to anon, authenticated;
+revoke all on function public.handle_new_user() from public;

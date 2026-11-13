@@ -44,7 +44,7 @@ export default function Register() {
     setBusy(true)
     const err = await signUp(username, email.trim(), password)
     setBusy(false)
-    if (err) setFormError(/already|duplicate|database error/i.test(err) ? 'That username or email is already registered.' : err)
+    if (err) setFormError(/already|duplicate|database error/i.test(err) ? 'Could not create the account. The username or email may already be registered.' : err)
   }
 
   const show1 = (msg: string | null) => (submitted ? msg : null)
@@ -56,7 +56,7 @@ export default function Register() {
         <h1 className="text-4xl font-bold">Make your account</h1>
         <div>
           <label htmlFor="r-user" className={label}>Username</label>
-          <input id="r-user" className={input} value={username} autoComplete="username" autoCapitalize="none" spellCheck={false} maxLength={20}
+          <input id="r-user" className={input} value={username} autoComplete="username" autoCapitalize="none" spellCheck={false}
             aria-invalid={!!uErr} aria-describedby="r-user-e" onChange={(e) => setUsername(e.target.value)} />
           <p id="r-user-e" role="alert" className="mt-1 text-base font-bold text-red-700">{uErr}</p>
         </div>
@@ -71,7 +71,7 @@ export default function Register() {
           <div className="flex gap-2">
             <input id="r-pass" type={show ? 'text' : 'password'} className={input} value={password} autoComplete="new-password"
               aria-invalid={!!show1(passError)} aria-describedby="r-pass-e" onChange={(e) => setPassword(e.target.value)} />
-            <button type="button" className="btn shrink-0 px-4 text-base" aria-pressed={show} onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button>
+            <button type="button" className="btn shrink-0 px-4 text-base" onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button>
           </div>
           <p id="r-pass-e" role="alert" className="mt-1 text-base font-bold text-red-700">{show1(passError)}</p>
         </div>
