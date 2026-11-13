@@ -30,17 +30,17 @@ export default function Login() {
         <div>
           <label htmlFor="l-user" className={label}>Username</label>
           <input id="l-user" className={input} value={username} autoComplete="username" autoCapitalize="none" spellCheck={false}
-            onChange={(e) => setUsername(e.target.value)} />
+            aria-invalid={!!error} aria-describedby="l-err" onChange={(e) => setUsername(e.target.value)} />
         </div>
         <div>
           <label htmlFor="l-pass" className={label}>Password</label>
           <div className="flex gap-2">
             <input id="l-pass" type={show ? 'text' : 'password'} className={input} value={password} autoComplete="current-password"
-              onChange={(e) => setPassword(e.target.value)} />
-            <button type="button" className="btn shrink-0 px-4 text-base" onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button>
+              aria-invalid={!!error} aria-describedby="l-err" onChange={(e) => setPassword(e.target.value)} />
+            <button type="button" className="btn shrink-0 px-4 text-base" aria-pressed={show} onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button>
           </div>
         </div>
-        <p role="alert" className="text-base font-bold text-red-700">{error}</p>
+        <p id="l-err" role="alert" className="text-base font-bold text-red-700">{error}</p>
         <button type="submit" className="btn btn-pink" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
         {/* Inactive until password reset ships (docs/backlog.md). */}
         <span aria-disabled="true" className="text-center text-base text-ink/50">Forgot password?</span>

@@ -70,7 +70,7 @@ export default function Register() {
           <div className="flex gap-2">
             <input id="r-pass" type={show ? 'text' : 'password'} className={input} value={password} autoComplete="new-password"
               aria-invalid={!!show1(passError)} aria-describedby="r-pass-e" onChange={(e) => setPassword(e.target.value)} />
-            <button type="button" className="btn shrink-0 px-4 text-base" onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button>
+            <button type="button" className="btn shrink-0 px-4 text-base" aria-pressed={show} onClick={() => setShow(!show)}>{show ? 'Hide' : 'Show'}</button>
           </div>
           <p id="r-pass-e" role="alert" className="mt-1 text-base font-bold text-red-700">{show1(passError)}</p>
         </div>

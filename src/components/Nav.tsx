@@ -48,8 +48,8 @@ export default function Nav() {
               </>
             ) : (
               <>
-                <Link to="/login" className="btn !min-h-11 !px-4 !text-base">Log in</Link>
-                <Link to="/register" className="btn btn-ink !min-h-11 !px-4 !text-base">Sign up</Link>
+                <Link to="/login" className="btn !min-h-11 !px-3 sm:!px-4 !text-base whitespace-nowrap">Log in</Link>
+                <Link to="/register" className="btn btn-ink !min-h-11 !px-3 sm:!px-4 !text-base whitespace-nowrap">Sign up</Link>
               </>
             )}
           </div>
