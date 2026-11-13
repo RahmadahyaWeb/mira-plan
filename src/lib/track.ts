@@ -30,3 +30,12 @@ export function streak(plan: Plan, log: Log, today: string) {
   }
   return n
 }
+
+/** Which per-day rows a save must write: days added or changed, and days gone. */
+export function diffLog(prev: Log, next: Log) {
+  const same = (a: DayLog, b: DayLog) => a.water === b.water && a.done.length === b.done.length && a.done.every((x, i) => x === b.done[i])
+  return {
+    upsert: Object.keys(next).filter((k) => !prev[k] || !same(prev[k], next[k])),
+    remove: Object.keys(prev).filter((k) => !(k in next)),
+  }
+}

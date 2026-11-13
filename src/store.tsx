@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Profile } from './lib/calc'
 import type { Plan } from './lib/plan'
-import type { Log } from './lib/track'
+import { diffLog, type Log } from './lib/track'
 import { supabase } from './lib/supabase'
 import { useAuth } from './auth'
 
@@ -37,12 +37,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setState(empty)
     setError(null)
     if (!id) return
-    supabase.from('plans').select('profile, plan').eq('account_id', id).maybeSingle().then(({ data, error: e }) => {
+    Promise.all([
+      supabase.from('plans').select('profile, plan').eq('account_id', id).maybeSingle(),
+      supabase.from('logs').select('day, done, water').eq('account_id', id),
+    ]).then(([{ data, error: e }, { data: days, error: e2 }]) => {
       if (stale) return
-      if (e) setError('Could not load your plan. Check your connection and reload.')
+      if (e || e2) setError('Could not load your plan. Check your connection and reload.')
       else {
         loaded.current = true
-        ref.current = { ...empty, profile: data?.profile ?? null, plan: data?.plan ?? null }
+        const log: Log = Object.fromEntries((days ?? []).map((r) => [r.day, { done: r.done, water: r.water }]))
+        ref.current = { profile: data?.profile ?? null, plan: data?.plan ?? null, log }
       }
       setState(ref.current)
       setLoadedFor(id)
@@ -55,12 +59,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const next = fn(prev)
     ref.current = next
     setState(next)
-    if (!id || !loaded.current || (prev.profile === next.profile && prev.plan === next.plan)) return
+    if (!id || !loaded.current) return
+    const planChanged = prev.profile !== next.profile || prev.plan !== next.plan
+    const { upsert, remove } = diffLog(prev.log, next.log)
+    if (!planChanged && !upsert.length && !remove.length) return
     // Saves run one at a time so the last change wins; a failure keeps the banner until a later save works.
     queue.current = queue.current.then(async () => {
-      const { error: e } = await supabase.from('plans').upsert({ account_id: id, profile: next.profile, plan: next.plan, updated_at: new Date().toISOString() })
+      const results = await Promise.all([
+        planChanged && supabase.from('plans').upsert({ account_id: id, profile: next.profile, plan: next.plan, updated_at: new Date().toISOString() }),
+        upsert.length > 0 && supabase.from('logs').upsert(upsert.map((day) => ({ account_id: id, day, done: next.log[day].done, water: next.log[day].water }))),
+        remove.length > 0 && supabase.from('logs').delete().eq('account_id', id).in('day', remove),
+      ])
       if (idNow.current !== id) return // signed out or switched meanwhile
-      setError(e ? 'Could not save your changes. They are kept on this screen; we will retry on your next change.' : null)
+      setError(results.some((r) => r && r.error) ? 'Could not save your changes. They are kept on this screen; we will retry on your next change.' : null)
     })
   }
 
