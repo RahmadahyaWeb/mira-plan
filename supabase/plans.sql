@@ -4,6 +4,7 @@ create table public.plans (
   account_id uuid primary key references public.accounts (id) on delete cascade,
   profile jsonb,
   plan jsonb,
+  custom jsonb, -- the Account's Custom Meals and Moves
   updated_at timestamptz not null default now()
 );
 
@@ -13,3 +14,6 @@ create policy "own plan insert" on public.plans for insert to authenticated with
 create policy "own plan update" on public.plans for update to authenticated
   using (account_id = auth.uid()) with check (account_id = auth.uid());
 -- No delete policy, no anon access.
+
+-- Existing projects: add the Custom column.
+alter table public.plans add column if not exists custom jsonb;

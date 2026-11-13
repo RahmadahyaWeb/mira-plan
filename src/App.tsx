@@ -6,6 +6,7 @@ import Wizard from './pages/Wizard'
 import Today from './pages/Today'
 import Week from './pages/Week'
 import MealPage from './pages/MealPage'
+import Library from './pages/Library'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { PublicOnly, RequireAccount } from './guards'
@@ -33,6 +34,7 @@ export default function App() {
             <Route path="/today/:key" element={<Today />} />
             <Route path="/week" element={<Week />} />
             <Route path="/meal/:id" element={<MealPage />} />
+            <Route path="/library" element={<Library />} />
           </Route>
           {import.meta.env.DEV && <Route path="/_art" element={<ArtSheet />} />}
           <Route path="*" element={<Landing />} />

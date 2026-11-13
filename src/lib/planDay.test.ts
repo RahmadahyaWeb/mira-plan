@@ -1,17 +1,18 @@
 import { describe, expect, it } from 'vitest'
-import type { State } from './accountData'
+import { empty, noCustom, type State } from './accountData'
 import type { Profile } from './calc'
 import { addDays } from './date'
 import { generatePlan } from './plan'
-import { drink, mealOnToday, planDay, planWeek, startPlan, swap, tick } from './planDay'
+import { addCustomMeal, drink, mealOnToday, planDay, planWeek, startPlan, swap, tick } from './planDay'
+import { catalog, isCustom } from './catalog'
 import { itemIds } from './track'
 import { MEAL_BY_ID } from '../data/meals'
 
 const profile: Profile = { name: '', sex: 'female', age: 30, heightCm: 165, weightKg: 65, activity: 'light', goal: 'lose', diet: 'anything', level: 0, workoutDays: 3 }
 const start = '2026-01-01'
 const plan = generatePlan(profile, start, 42)
-const fresh: State = { profile, plan, log: {} }
-const ready = (s: State) => ({ plan: s.plan!, profile: s.profile!, log: s.log })
+const fresh: State = { profile, plan, log: {}, custom: noCustom }
+const ready = (s: State) => ({ ...s, plan: s.plan!, profile: s.profile! })
 
 describe('planDay', () => {
   it('starts with nothing ticked', () => {
@@ -67,7 +68,7 @@ describe('actions', () => {
     expect(swap(0, 0)({ ...fresh, plan: null })).toEqual({ ...fresh, plan: null })
   })
   it('a new Plan drops ticks from today on and keeps the past', () => {
-    const old: State = { profile, plan, log: { '2026-01-01': { done: ['meal-0'], water: 1 }, '2026-01-05': { done: [], water: 3 }, '2026-01-06': { done: ['move-0'], water: 0 } } }
+    const old: State = { profile, plan, custom: noCustom, log: { '2026-01-01': { done: ['meal-0'], water: 1 }, '2026-01-05': { done: [], water: 3 }, '2026-01-06': { done: ['move-0'], water: 0 } } }
     const fresh2 = generatePlan(profile, '2026-01-05', 7)
     const next = startPlan(profile, fresh2, '2026-01-05')(old)
     expect(Object.keys(next.log)).toEqual(['2026-01-01'])
@@ -84,6 +85,33 @@ describe('mealOnToday', () => {
   })
   it('is -1 and scale 1 for a meal not on today, or with no Plan', () => {
     expect(mealOnToday(fresh, 'nope', start)).toEqual({ index: -1, scale: 1, eaten: false })
-    expect(mealOnToday({ profile: null, plan: null, log: {} }, 'x', start).index).toBe(-1)
+    expect(mealOnToday(empty, 'x', start).index).toBe(-1)
+  })
+})
+
+describe('Custom Meals', () => {
+  const nasi = { name: 'Nasi Uduk', slot: 'breakfast' as const, emoji: '🍚', kcal: 450, protein: 10, carbs: 70, fat: 14, diet: 'vegan' as const, minutes: 0, ingredients: [], steps: [] }
+  it('adding one gives it a Custom id and the catalog finds it', () => {
+    const s = addCustomMeal(nasi)(fresh)
+    const [m] = s.custom.meals
+    expect(isCustom(m.id)).toBe(true)
+    expect(catalog(s).meal(m.id)).toEqual(m)
+    expect(catalog(s).meals[0]).toEqual(m)
+  })
+  it('no Built-in id looks Custom', () => {
+    expect(catalog({}).meals.some((m) => isCustom(m.id))).toBe(false)
+    expect(catalog({}).moves.some((m) => isCustom(m.id))).toBe(false)
+  })
+  it('a Custom Meal on a Plan day counts when ticked', () => {
+    const s = addCustomMeal(nasi)(fresh)
+    const id = s.custom.meals[0].id
+    const withIt: State = { ...s, plan: { ...plan, days: plan.days.map((d, i) => (i === 0 ? { ...d, meals: d.meals.map((m, j) => (j === 0 ? { ...m, id } : m)) } : d)) } }
+    const d = planDay(ready(tick(start, 'meal-0')(withIt)), start)
+    expect(d.eaten.kcal).toBeCloseTo(450 * d.day.scale)
+  })
+  it('a new Plan keeps Custom Meals', () => {
+    const s = addCustomMeal(nasi)(fresh)
+    const next = startPlan(profile, generatePlan(profile, '2026-01-05', 7), '2026-01-05')(s)
+    expect(next.custom).toBe(s.custom)
   })
 })

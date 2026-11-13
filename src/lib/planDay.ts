@@ -1,12 +1,13 @@
-import type { State } from './accountData'
+import type { Custom, State } from './accountData'
 import { macroTargets, moveKcal, type Profile } from './calc'
 import { addDays, daysBetween, planDayIndex } from './date'
 import { swapMeal, type Plan, type PlanDay } from './plan'
 import { dayFor, progress, type Log } from './track'
-import { catalog } from './catalog'
+import { catalog, newCustomId } from './catalog'
+import type { Meal } from '../data/meals'
 
 /** Account data once it has a Profile and a Plan. */
-export interface Ready { plan: Plan; profile: Profile; log: Log }
+export interface Ready { plan: Plan; profile: Profile; log: Log; custom: Custom }
 
 export const WATER_GOAL = 8
 
@@ -81,6 +82,12 @@ export const drink = (key: string, i: number): Update => (s) => {
 
 export const swap = (dayIdx: number, mealIdx: number): Update => (s) =>
   s.plan && s.profile ? { ...s, plan: swapMeal(s.plan, dayIdx, mealIdx, s.profile.diet, catalog(s)) } : s
+
+/** Add a Custom Meal to the Account's Library. */
+export const addCustomMeal = (meal: Omit<Meal, 'id'>): Update => (s) => ({
+  ...s,
+  custom: { ...s.custom, meals: [...s.custom.meals, { ...meal, id: newCustomId() }] },
+})
 
 /** A new Plan: ticks from today on belonged to the old Plan's items, so they go. */
 export const startPlan = (profile: Profile, plan: Plan, today: string): Update => (s) => ({

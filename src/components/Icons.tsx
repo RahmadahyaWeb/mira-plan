@@ -8,6 +8,7 @@ export const Flame = ({ className = 'size-5' }: P) => <svg viewBox="0 0 24 24" c
 export const Printer = ({ className = 'size-5' }: P) => <svg viewBox="0 0 24 24" className={className} {...s}><path d="M7 9V3h10v6M7 18H4v-7a2 2 0 012-2h12a2 2 0 012 2v7h-3M7 14h10v7H7z" /></svg>
 export const Drop = ({ className = 'size-5' }: P) => <svg viewBox="0 0 24 24" className={className} {...s}><path d="M12 3s6 6.5 6 11a6 6 0 01-12 0c0-4.5 6-11 6-11z" /></svg>
 export const Clock = ({ className = 'size-4' }: P) => <svg viewBox="0 0 24 24" className={className} {...s}><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></svg>
+export const Book = ({ className = 'size-5' }: P) => <svg viewBox="0 0 24 24" className={className} {...s}><path d="M4 5.5A2.5 2.5 0 016.5 3H20v15H6.5A2.5 2.5 0 004 20.5zM4 20.5A2.5 2.5 0 006.5 23H20v-5" /></svg>
 export const Calendar = ({ className = 'size-5' }: P) => <svg viewBox="0 0 24 24" className={className} {...s}><rect x="3.5" y="5" width="17" height="15" rx="3" /><path d="M3.5 10h17M8 3v4M16 3v4" /></svg>
 export const CheckCircle = ({ className = 'size-5' }: P) => <svg viewBox="0 0 24 24" className={className} {...s}><circle cx="12" cy="12" r="8.5" /><path d="M8 12.3l2.7 2.7L16 9.5" /></svg>
 export const Sparkle = ({ className = 'size-5' }: P) => <svg viewBox="0 0 24 24" className={className} {...s}><path d="M12 3c.6 4.6 2.4 6.4 7 7-4.6.6-6.4 2.4-7 7-.6-4.6-2.4-6.4-7-7 4.6-.6 6.4-2.4 7-7z" /></svg>

@@ -1,8 +1,8 @@
-import type { AccountDataAdapter, State } from './accountData'
+import { noCustom, type AccountDataAdapter, type State } from './accountData'
 import type { DayLog } from './track'
 
 /** Second adapter at the seam: in memory, with switches to make calls fail or wait. */
-export function createMemoryAdapter(seed: State = { profile: null, plan: null, log: {} }) {
+export function createMemoryAdapter(seed: State = { profile: null, plan: null, log: {}, custom: noCustom }) {
   const store = { ...seed, log: { ...seed.log } }
   const calls: string[] = []
   const ctl = { failLoad: false, failSave: false, hold: null as Promise<void> | null }
@@ -26,6 +26,10 @@ export function createMemoryAdapter(seed: State = { profile: null, plan: null, l
       await saved(`saveLog +${Object.keys(upsert).join(',')} -${remove.join(',')}`)
       Object.assign(store.log, upsert)
       remove.forEach((d) => delete store.log[d])
+    },
+    async saveCustom(_id, custom) {
+      await saved('saveCustom')
+      store.custom = custom
     },
   }
   return { adapter, store, calls, ctl }

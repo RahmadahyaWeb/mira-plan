@@ -43,7 +43,7 @@ export default function Today() {
   if (!plan || !profile) return <NoPlan />
   const cat = catalog(state)
 
-  const { day, index: dayIdx, done, progress: prog, water, eaten, burned, macros } = planDay({ plan, profile, log }, key)
+  const { day, index: dayIdx, done, progress: prog, water, eaten, burned, macros } = planDay({ ...state, plan, profile }, key)
   const st = streak(plan, log, today)
   const toggle = (id: string) => set(tick(key, id))
   const isToday = key === today

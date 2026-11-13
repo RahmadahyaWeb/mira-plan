@@ -15,11 +15,11 @@ const TOPS = ['bg-pink', 'bg-sky', 'bg-butter', 'bg-lilac']
 
 export default function Week() {
   const { state } = useStore()
-  const { plan, profile, log } = state
+  const { plan, profile } = state
   if (!plan || !profile) return <NoPlan />
   const cat = catalog(state)
   const today = dateKey()
-  const { days, done: weekDone, total: weekTotal, mealCount, moveDays } = planWeek({ plan, profile, log }, today)
+  const { days, done: weekDone, total: weekTotal, mealCount, moveDays } = planWeek({ ...state, plan, profile }, today)
   return (
     <div className="wrap pb-16 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">

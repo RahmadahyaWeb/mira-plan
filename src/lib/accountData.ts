@@ -1,15 +1,22 @@
 import type { Profile } from './calc'
 import type { Plan } from './plan'
 import type { DayLog, Log } from './track'
+import type { Meal } from '../data/meals'
+import type { Move } from '../data/exercises'
 
-export interface State { profile: Profile | null; plan: Plan | null; log: Log }
-export const empty: State = { profile: null, plan: null, log: {} }
+/** The Account's own Meals and Moves. */
+export interface Custom { meals: Meal[]; moves: Move[] }
+export const noCustom: Custom = { meals: [], moves: [] }
+
+export interface State { profile: Profile | null; plan: Plan | null; log: Log; custom: Custom }
+export const empty: State = { profile: null, plan: null, log: {}, custom: noCustom }
 
 /** The seam. Every call rejects on failure. */
 export interface AccountDataAdapter {
   load(accountId: string): Promise<State>
   savePlan(accountId: string, profile: Profile | null, plan: Plan | null): Promise<void>
   saveLog(accountId: string, upsert: Record<string, DayLog>, remove: string[]): Promise<void>
+  saveCustom(accountId: string, custom: Custom): Promise<void>
 }
 
 export interface Snapshot {
@@ -84,12 +91,14 @@ export function createAccountData(adapter: AccountDataAdapter) {
     const id = accountId
     if (!id || !loaded) return
     const planChanged = prev.profile !== next.profile || prev.plan !== next.plan
+    const customChanged = prev.custom !== next.custom
     const { upsert, remove } = diffLog(prev.log, next.log)
-    if (!planChanged && !upsert.length && !remove.length) return
+    if (!planChanged && !customChanged && !upsert.length && !remove.length) return
     const gen = generation
     queue = queue.then(async () => {
       const jobs: Promise<void>[] = []
       if (planChanged) jobs.push(adapter.savePlan(id, next.profile, next.plan))
+      if (customChanged) jobs.push(adapter.saveCustom(id, next.custom))
       if (upsert.length) jobs.push(adapter.saveLog(id, Object.fromEntries(upsert.map((d) => [d, next.log[d]])), []))
       if (remove.length) jobs.push(adapter.saveLog(id, {}, remove))
       const results = await Promise.allSettled(jobs)

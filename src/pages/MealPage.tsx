@@ -4,7 +4,7 @@ import Mascot from '../components/Mascot'
 import FoodArt from '../components/FoodArt'
 import { Plate, SLOT_COLOR, DISH, SLOT_LABEL, fmt } from '../components/Bits'
 import { ArrowLeft, Check, Clock } from '../components/Icons'
-import { MEALS, fitsDiet, type Meal } from '../data/meals'
+import { fitsDiet, type Meal } from '../data/meals'
 import { catalog } from '../lib/catalog'
 import { useStore } from '../store'
 import { dateKey } from '../lib/date'
@@ -18,14 +18,15 @@ export default function MealPage() {
   const nav = useNavigate()
   const { state, set } = useStore()
   const [got, setGot] = useState<Set<number>>(new Set())
-  const m: Meal | undefined = catalog(state).meal(id)
+  const cat = catalog(state)
+  const m: Meal | undefined = cat.meal(id)
   if (!m) return <div className="wrap py-20 text-center"><h1 className="text-4xl font-bold">Meal not found</h1><Link to="/" className="btn mt-6">Home</Link></div>
 
   // when this meal is on today's plan: show today's portion and let it be ticked from here
   const today = dateKey()
   const { index: mealIdx, scale, eaten } = mealOnToday(state, id, today)
   const diet = state.profile?.diet ?? 'anything'
-  const more = MEALS.filter((x) => x.slot === m.slot && x.id !== m.id && fitsDiet(x, diet)).slice(0, 3)
+  const more = cat.meals.filter((x) => x.slot === m.slot && x.id !== m.id && fitsDiet(x, diet)).slice(0, 3)
   const k = (n: number) => fmt(n * scale)
 
   return (
@@ -46,7 +47,7 @@ export default function MealPage() {
         <div>
           <div className="flex flex-wrap gap-2">
             <span className={`chip ${SLOT_COLOR[m.slot]}`}>{SLOT_LABEL[m.slot]}</span>
-            <span className="chip"><Clock />{m.minutes} min</span>
+            {m.minutes > 0 && <span className="chip"><Clock />{m.minutes} min</span>}
             <span className="chip">{DIET_LABEL[m.diet]}</span>
           </div>
           <h1 className="mt-4 text-4xl font-bold leading-[1.02] sm:text-6xl">{m.name}</h1>
@@ -66,8 +67,9 @@ export default function MealPage() {
         </div>
       </div>
 
+      {/* a Custom Meal may have no recipe: then these cards are left out */}
       <div className="mt-10 grid gap-6 md:grid-cols-2">
-        <section className="card overflow-hidden">
+        {m.ingredients.length > 0 && <section className="card overflow-hidden">
           <h2 className="border-b-[2.5px] border-ink bg-butter px-6 py-4 text-3xl font-bold">Ingredients</h2>
           <div className="p-6 pt-4">
           <ul className="space-y-2">
@@ -84,8 +86,8 @@ export default function MealPage() {
             })}
           </ul>
           </div>
-        </section>
-        <section className="card overflow-hidden">
+        </section>}
+        {m.steps.length > 0 && <section className="card overflow-hidden">
           <h2 className="border-b-[2.5px] border-ink bg-sky px-6 py-4 text-3xl font-bold">How to make it</h2>
           <div className="p-6">
           <ol className="space-y-4">
@@ -96,9 +98,9 @@ export default function MealPage() {
               </li>
             ))}
           </ol>
-          <p className="mt-6 rounded-2xl bg-pink/50 p-4 font-display text-lg font-medium">Takes about {m.minutes} minutes. You&apos;ve got this!</p>
+          {m.minutes > 0 && <p className="mt-6 rounded-2xl bg-pink/50 p-4 font-display text-lg font-medium">Takes about {m.minutes} minutes. You&apos;ve got this!</p>}
           </div>
-        </section>
+        </section>}
       </div>
 
       {more.length > 0 && (
@@ -109,7 +111,7 @@ export default function MealPage() {
               <li key={x.id}>
                 <Link to={`/meal/${x.id}`} className="card flex items-center gap-4 p-4 transition-transform duration-150 hover:-translate-y-1">
                   <Plate art={<FoodArt meal={x} dish={DISH[x.slot]} />} color={SLOT_COLOR[x.slot]} size={60} />
-                  <span className="leading-tight"><span className="block font-display text-xl font-semibold">{x.name}</span><span className="text-sm text-ink-soft">{x.kcal} kcal · {x.minutes} min</span></span>
+                  <span className="leading-tight"><span className="block font-display text-xl font-semibold">{x.name}</span><span className="text-sm text-ink-soft">{x.kcal} kcal{x.minutes > 0 && ` · ${x.minutes} min`}</span></span>
                 </Link>
               </li>
             ))}
