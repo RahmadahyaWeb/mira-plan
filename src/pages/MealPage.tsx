@@ -5,9 +5,9 @@ import FoodArt from '../components/FoodArt'
 import { Plate, SLOT_COLOR, DISH, SLOT_LABEL, fmt } from '../components/Bits'
 import { ArrowLeft, Check, Clock } from '../components/Icons'
 import { MEALS, MEAL_BY_ID, fitsDiet } from '../data/meals'
-import { useStore, toggleDone } from '../store'
+import { useStore } from '../store'
 import { dateKey } from '../lib/date'
-import { dayFor } from '../lib/track'
+import { mealOnToday, tick } from '../lib/planDay'
 
 const STAGE = { breakfast: 'bg-butter/45', lunch: 'bg-sky/45', snack: 'bg-lilac/45', dinner: 'bg-pink/45' }
 const DIET_LABEL ={ vegan: '🥦 Vegan', vegetarian: '🧀 Vegetarian', anything: '🍗 Omnivore' }
@@ -22,10 +22,7 @@ export default function MealPage() {
 
   // when this meal is on today's plan: show today's portion and let it be ticked from here
   const today = dateKey()
-  const todayDay = state.plan ? dayFor(state.plan, today) : null
-  const mealIdx = todayDay ? todayDay.meals.findIndex((pm) => pm.id === id) : -1
-  const scale = mealIdx >= 0 ? todayDay!.scale : 1
-  const eaten = mealIdx >= 0 && (state.log[today]?.done ?? []).includes(`meal-${mealIdx}`)
+  const { index: mealIdx, scale, eaten } = mealOnToday(state, id, today)
   const diet = state.profile?.diet ?? 'anything'
   const more = MEALS.filter((x) => x.slot === m.slot && x.id !== m.id && fitsDiet(x, diet)).slice(0, 3)
   const k = (n: number) => fmt(n * scale)
@@ -60,7 +57,7 @@ export default function MealPage() {
           </div>
           {scale !== 1 && <p className="mt-3 text-sm text-ink-soft">Numbers include today&apos;s portion size (×{scale}).</p>}
           {mealIdx >= 0 && (
-            <button type="button" aria-pressed={eaten} onClick={() => set((s) => ({ ...s, log: toggleDone(s.log, today, `meal-${mealIdx}`) }))} className={`btn mt-5 !min-h-14 !px-8 !text-xl ${eaten ? 'btn-pink' : 'btn-ink'}`}>
+            <button type="button" aria-pressed={eaten} onClick={() => set(tick(today, `meal-${mealIdx}`))} className={`btn mt-5 !min-h-14 !px-8 !text-xl ${eaten ? 'btn-pink' : 'btn-ink'}`}>
               {eaten ? <><Check />Eaten today</> : 'Mark as eaten'}
             </button>
           )}

@@ -5,11 +5,10 @@ import FoodArt from '../components/FoodArt'
 import Ring from '../components/Ring'
 import { Bubble, Plate, KIND_COLOR, SLOT_COLOR, DISH, SLOT_LABEL, fmt } from '../components/Bits'
 import { ArrowLeft, ArrowRight, Bolt, Check, Clock, Drop, Flame, Swap } from '../components/Icons'
-import { useStore, toggleDone, setWater } from '../store'
-import { addDays, dateKey, planDayIndex, prettyDay } from '../lib/date'
-import { dayFor, progress, streak } from '../lib/track'
-import { swapMeal } from '../lib/plan'
-import { macroTargets, moveKcal } from '../lib/calc'
+import { useStore } from '../store'
+import { addDays, dateKey, prettyDay } from '../lib/date'
+import { streak } from '../lib/track'
+import { WATER_GOAL, drink, planDay, swap, tick } from '../lib/planDay'
 import { MEAL_BY_ID, type Slot } from '../data/meals'
 import { MOVE_BY_ID } from '../data/exercises'
 import NoPlan from '../components/NoPlan'
@@ -43,22 +42,9 @@ export default function Today() {
   const { plan, profile, log } = state
   if (!plan || !profile) return <NoPlan />
 
-  const day = dayFor(plan, key)
-  const dayIdx = planDayIndex(plan.startKey, key)
-  const done = new Set(log[key]?.done ?? [])
-  const prog = progress(plan, log, key)
-  const water = log[key]?.water ?? 0
+  const { day, index: dayIdx, done, progress: prog, water, eaten, burned, macros } = planDay({ plan, profile, log }, key)
   const st = streak(plan, log, today)
-  const macros = macroTargets(profile, plan.target)
-
-  const eaten = day.meals.reduce((acc, pm, i) => {
-    if (!done.has(`meal-${i}`)) return acc
-    const m = MEAL_BY_ID[pm.id]
-    return { kcal: acc.kcal + m.kcal * day.scale, protein: acc.protein + m.protein * day.scale, carbs: acc.carbs + m.carbs * day.scale, fat: acc.fat + m.fat * day.scale }
-  }, { kcal: 0, protein: 0, carbs: 0, fat: 0 })
-  const burned = day.workout.moves.reduce((s, id, i) => (done.has(`move-${i}`) ? s + moveKcal(MOVE_BY_ID[id].met, profile.weightKg, MOVE_BY_ID[id].minutes[profile.level]) : s), 0)
-
-  const toggle = (id: string) => set((s) => ({ ...s, log: toggleDone(s.log, key, id) }))
+  const toggle = (id: string) => set(tick(key, id))
   const isToday = key === today
   const label = isToday ? 'Today' : key === addDays(today, -1) ? 'Yesterday' : key === addDays(today, 1) ? 'Tomorrow' : prettyDay(key, { weekday: 'long' })
 
@@ -108,10 +94,10 @@ export default function Today() {
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-2 text-sm font-bold text-ink-soft"><span className="whitespace-nowrap">{SLOT_LABEL[m.slot]} · {fmt(m.kcal * day.scale)} kcal</span>{on && <span className="animate-pop rounded-full bg-ink px-2 py-px text-xs font-extrabold text-paper">Done</span>}</p>
                       <Link to={`/meal/${m.id}`} className={`block font-display text-lg font-semibold leading-tight hover:underline sm:text-2xl `}>{m.name}</Link>
-                      <button type="button" onClick={() => set((s) => ({ ...s, plan: swapMeal(s.plan!, dayIdx, i, profile.diet) }))} className="mt-1 inline-flex items-center gap-1 rounded-full py-0.5 text-sm font-bold text-ink-soft sm:hidden"><Swap className="size-4" />Swap</button>
+                      <button type="button" onClick={() => set(swap(dayIdx, i))} className="mt-1 inline-flex items-center gap-1 rounded-full py-0.5 text-sm font-bold text-ink-soft sm:hidden"><Swap className="size-4" />Swap</button>
                       <p className="mt-0.5 hidden items-center gap-1 text-sm text-ink-soft sm:flex"><Clock />{m.minutes} min · P {Math.round(m.protein * day.scale)} · C {Math.round(m.carbs * day.scale)} · F {Math.round(m.fat * day.scale)}</p>
                     </div>
-                    <button type="button" onClick={() => set((s) => ({ ...s, plan: swapMeal(s.plan!, dayIdx, i, profile.diet) }))} aria-label={`Swap ${m.name}`} title="Swap for another meal"
+                    <button type="button" onClick={() => set(swap(dayIdx, i))} aria-label={`Swap ${m.name}`} title="Swap for another meal"
                       className="grid size-11 shrink-0 place-items-center rounded-full border-2 border-ink/25 bg-paper max-sm:hidden text-ink-soft transition-colors hover:border-ink hover:bg-sky hover:text-ink">
                       <Swap />
                     </button>
@@ -193,11 +179,11 @@ export default function Today() {
           </div>
 
           <div className="card p-5">
-            <div className="flex items-baseline justify-between"><h2 className="text-2xl font-semibold">Water</h2><p className="font-bold">{water} / 8 glasses</p></div>
+            <div className="flex items-baseline justify-between"><h2 className="text-2xl font-semibold">Water</h2><p className="font-bold">{water} / {WATER_GOAL} glasses</p></div>
             <div className="mt-3 grid grid-cols-8 gap-2">
-              {Array.from({ length: 8 }, (_, i) => (
+              {Array.from({ length: WATER_GOAL }, (_, i) => (
                 <button key={i} type="button" aria-label={`${i + 1} glass${i ? 'es' : ''} of water`} aria-pressed={i < water}
-                  onClick={() => set((s) => ({ ...s, log: setWater(s.log, key, i < water && i === water - 1 ? i : i + 1) }))}
+                  onClick={() => set(drink(key, i))}
                   className={`grid h-12 place-items-center rounded-b-2xl rounded-t-md border-[2.5px] border-ink transition-colors ${i < water ? 'bg-sky text-ink' : 'bg-paper text-ink/25'}`}>
                   <Drop className="size-5" />
                 </button>

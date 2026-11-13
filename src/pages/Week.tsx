@@ -7,8 +7,8 @@ import { Plate, SLOT_COLOR, DISH, fmt } from '../components/Bits'
 import { Printer } from '../components/Icons'
 import NoPlan from '../components/NoPlan'
 import { useStore } from '../store'
-import { addDays, dateKey, prettyDay, daysBetween } from '../lib/date'
-import { dayFor, progress } from '../lib/track'
+import { dateKey, prettyDay } from '../lib/date'
+import { planWeek } from '../lib/planDay'
 import { MEAL_BY_ID } from '../data/meals'
 import { MOVE_BY_ID } from '../data/exercises'
 
@@ -19,19 +19,12 @@ export default function Week() {
   const { plan, profile, log } = state
   if (!plan || !profile) return <NoPlan />
   const today = dateKey()
-  // the current 7-day cycle of the plan
-  const cycleStart = addDays(plan.startKey, Math.floor(Math.max(0, daysBetween(plan.startKey, today)) / 7) * 7)
-  const keys = Array.from({ length: 7 }, (_, i) => addDays(cycleStart, i))
-  const weekDone = keys.reduce((s, k) => s + progress(plan, log, k).done, 0)
-  const weekTotal = keys.reduce((s, k) => s + progress(plan, log, k).total, 0)
-  const mealCount = keys.reduce((s, k) => s + dayFor(plan, k).meals.length, 0)
-  const moveDays = keys.filter((k) => !dayFor(plan, k).workout.rest).length
-
+  const { days, done: weekDone, total: weekTotal, mealCount, moveDays } = planWeek({ plan, profile, log }, today)
   return (
     <div className="wrap pb-16 pt-2">
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="font-bold text-ink-soft">{prettyDay(keys[0], { month: 'short', day: 'numeric' })} to {prettyDay(keys[6], { month: 'short', day: 'numeric' })} · {fmt(plan.target)} kcal a day</p>
+          <p className="font-bold text-ink-soft">{prettyDay(days[0].key, { month: 'short', day: 'numeric' })} to {prettyDay(days[6].key, { month: 'short', day: 'numeric' })} · {fmt(plan.target)} kcal a day</p>
           <h1 className="text-5xl font-bold sm:text-6xl">Your week</h1>
         </div>
         <div className="no-print flex flex-wrap items-center gap-3">
@@ -59,9 +52,7 @@ export default function Week() {
       </div>
 
       <ol className="mt-10 space-y-5">
-        {keys.map((k, i) => {
-          const day = dayFor(plan, k)
-          const p = progress(plan, log, k)
+        {days.map(({ key: k, day, progress: p }, i) => {
           const isToday = k === today
           return (
             <li key={k}>

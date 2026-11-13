@@ -12,6 +12,8 @@
 
 **Profile**: The body and goal details (sex, activity, goal, etc.) entered in the planning wizard that a Plan is built from.
 
+**Plan day**: One of the 7 scheduled days of a Plan (meals plus a workout), shown on a calendar date. A Plan repeats every 7 days.
+
 **Log**: The record of which Plan items an Account has ticked off, and water drunk, per day.
 
 **Account data**: The Profile, Plan and Log saved for one Account. It follows the Account across devices.

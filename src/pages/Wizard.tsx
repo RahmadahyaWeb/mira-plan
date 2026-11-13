@@ -9,6 +9,7 @@ import { kcalTarget, macroTargets, tdee, type Profile } from '../lib/calc'
 import { generatePlan } from '../lib/plan'
 import { dateKey } from '../lib/date'
 import { useStore } from '../store'
+import { startPlan } from '../lib/planDay'
 
 const blank: Profile = { name: '', sex: 'female', age: 30, heightCm: 165, weightKg: 65, activity: 'light', goal: 'lose', diet: 'anything', level: 0, workoutDays: 3 }
 
@@ -146,8 +147,7 @@ export default function Wizard() {
   const finish = () => {
     const today = dateKey()
     const plan = generatePlan(p, today)
-    // ticks from today on belonged to the old plan's items
-    set((s) => ({ ...s, profile: p, plan, log: Object.fromEntries(Object.entries(s.log).filter(([k]) => k < today)) }))
+    set(startPlan(p, plan, today))
     nav('/today')
   }
 

@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore, type ReactNode } from 'react'
 import { createAccountData, empty, type State } from './lib/accountData'
 import { supabaseAdapter } from './lib/accountDataSupabase'
-import type { Log } from './lib/track'
 import { useAuth } from './auth'
 
 const OLD_KEY = 'mira-planner-v1'
@@ -31,15 +30,4 @@ export function useStore() {
   const c = useContext(Ctx)
   if (!c) throw new Error('useStore outside StoreProvider')
   return c
-}
-
-export function toggleDone(log: Log, key: string, id: string): Log {
-  const day = log[key] ?? { done: [], water: 0 }
-  const done = day.done.includes(id) ? day.done.filter((x) => x !== id) : [...day.done, id]
-  return { ...log, [key]: { ...day, done } }
-}
-
-export function setWater(log: Log, key: string, water: number): Log {
-  const day = log[key] ?? { done: [], water: 0 }
-  return { ...log, [key]: { ...day, water } }
 }
