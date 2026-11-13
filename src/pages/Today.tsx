@@ -1,10 +1,9 @@
 import { useState } from 'react'
-import MoveArt from '../components/MoveArt'
 import { Link, useParams } from 'react-router-dom'
 import Mascot from '../components/Mascot'
 import FoodArt from '../components/FoodArt'
 import Ring from '../components/Ring'
-import { Bubble, Plate, KIND_COLOR, SLOT_COLOR, DISH, SLOT_LABEL, fmt } from '../components/Bits'
+import { Bubble, Plate, MovePlate, SLOT_COLOR, DISH, SLOT_LABEL, fmt } from '../components/Bits'
 import { ArrowLeft, ArrowRight, Bolt, Check, Clock, Drop, Flame, Swap } from '../components/Icons'
 import { useStore } from '../store'
 import { addDays, dateKey, prettyDay } from '../lib/date'
@@ -97,9 +96,11 @@ export default function Today() {
                     <span className="max-sm:hidden"><Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={60} /></span>
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-2 text-base font-bold text-ink-soft"><span className="whitespace-nowrap">{SLOT_LABEL[m.slot]} · {fmt(m.kcal * day.scale)} kcal</span>{on && <span className="animate-pop rounded-full bg-ink px-2 py-px text-xs font-extrabold text-paper">Done</span>}</p>
-                      <Link to={`/meal/${m.id}`} className={`block font-display text-lg font-semibold leading-tight hover:underline sm:text-2xl `}>{m.name}</Link>
-                      <button type="button" onClick={() => set(swap(dayIdx, i))} className="mt-1 inline-flex items-center gap-1 rounded-full py-0.5 text-sm font-bold text-ink-soft sm:hidden"><Swap className="size-4" />Swap</button>
-                      <button type="button" onClick={() => setEditing({ meal: i })} className="ml-3 mt-1 inline-flex items-center gap-1 rounded-full py-0.5 text-sm font-bold text-ink-soft sm:hidden">Pick</button>
+                      <Link to={`/meal/${m.id}`} className="block py-0.5 font-display text-lg font-semibold leading-tight hover:underline sm:text-2xl">{m.name}</Link>
+                      <div className="mt-1.5 flex gap-2 sm:hidden">
+                        <button type="button" onClick={() => set(swap(dayIdx, i))} aria-label={`Swap ${m.name}`} className="inline-flex min-h-11 items-center gap-1 rounded-full border-2 border-ink/25 bg-paper/70 px-3 text-sm font-bold text-ink-soft"><Swap className="size-4" />Swap</button>
+                        <button type="button" onClick={() => setEditing({ meal: i })} aria-label={`Pick another ${SLOT_LABEL[m.slot].toLowerCase()} instead of ${m.name}`} className="inline-flex min-h-11 items-center rounded-full border-2 border-ink/25 bg-paper/70 px-3 text-sm font-bold text-ink-soft">Pick</button>
+                      </div>
                       <p className="mt-0.5 hidden items-center gap-1 text-base font-semibold text-ink-soft sm:flex"><Clock />{m.minutes} min · P {Math.round(m.protein * day.scale)} · C {Math.round(m.carbs * day.scale)} · F {Math.round(m.fat * day.scale)}</p>
                     </div>
                     <button type="button" onClick={() => set(swap(dayIdx, i))} aria-label={`Swap ${m.name}`} title="Swap for another meal"
@@ -119,10 +120,10 @@ export default function Today() {
 
           {/* workout */}
           <section className="card p-3 sm:p-6" aria-labelledby="move-h">
-            <div className="flex flex-wrap items-baseline justify-between gap-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
               <h2 id="move-h" className="px-2 pt-1 text-2xl font-bold sm:p-0 sm:text-3xl">{day.workout.title}</h2>
-              <span className="chip bg-sky">{day.workout.moves.reduce((s, id) => s + cat.move(id).minutes[profile.level], 0)} min{day.workout.rest ? ' · easy day' : ''}</span>
-              <button type="button" onClick={() => setEditing(null)} className="btn !min-h-10 px-4 text-sm">Edit day</button>
+              <span className="chip mr-auto bg-sky">{day.workout.moves.reduce((s, id) => s + cat.move(id).minutes[profile.level], 0)} min{day.workout.rest ? ' · easy day' : ''}</span>
+              <button type="button" onClick={() => setEditing(null)} className="btn !min-h-11 px-4 text-sm">Edit day</button>
             </div>
             <ul className="mt-4 space-y-3">
               {day.workout.moves.map((mid, i) => {
@@ -131,7 +132,7 @@ export default function Today() {
                 const on = done.has(id)
                 return (
                   <li key={i} className={`flex items-center gap-3 rounded-2xl border-2 p-2.5 transition-colors sm:gap-4 sm:p-4 ${on ? 'border-ink bg-sky/50' : 'border-ink/12 bg-sky/12'}`}>
-                    <Plate art={<MoveArt id={mv.id} />} color={KIND_COLOR[mv.kind]} size={52} />
+                    <MovePlate mv={mv} size={52} />
                     <div className="min-w-0 flex-1">
                       <p className="flex items-center gap-2 text-base font-bold text-ink-soft"><span><span className="capitalize">{mv.kind}</span> · {mv.dose[profile.level]}</span>{on && <span className="animate-pop rounded-full bg-ink px-2 py-px text-xs font-extrabold text-paper">Done</span>}</p>
                       <p className={`font-display text-xl font-semibold leading-tight `}>{mv.name}</p>
@@ -191,7 +192,7 @@ export default function Today() {
 
           <div className="card p-5">
             <div className="flex items-baseline justify-between"><h2 className="text-2xl font-semibold">Water</h2><p className="font-bold">{water} / {WATER_GOAL} glasses</p></div>
-            <div className="mt-3 grid grid-cols-8 gap-2">
+            <div className="mt-3 grid grid-cols-4 gap-2 sm:grid-cols-8">
               {Array.from({ length: WATER_GOAL }, (_, i) => (
                 <button key={i} type="button" aria-label={`${i + 1} glass${i ? 'es' : ''} of water`} aria-pressed={i < water}
                   onClick={() => set(drink(key, i))}

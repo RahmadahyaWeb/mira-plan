@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import FoodArt from '../components/FoodArt'
-import MoveArt from '../components/MoveArt'
-import { Plate, SLOT_COLOR, SLOT_LABEL, KIND_COLOR, DISH, fmt } from '../components/Bits'
+import Mascot from '../components/Mascot'
+import { Plate, MovePlate, SLOT_COLOR, SLOT_LABEL, KIND_COLOR, DISH, fmt } from '../components/Bits'
 import { useStore } from '../store'
 import { catalog, isCustom } from '../lib/catalog'
 import { addCustomMeal, addCustomMove, deleteCustomMeal, deleteCustomMove, editCustomMeal, editCustomMove, INTENSITY_MET, type CustomMoveInput, type Intensity } from '../lib/planDay'
@@ -84,13 +84,15 @@ interface RowActions { onEdit: () => void; onDelete: () => void }
 
 /** Built-in items never get these: nobody can change them. */
 const Actions = ({ id, name, onEdit, onDelete }: RowActions & { id: string; name: string }) => isCustom(id) ? (
-  <div className="flex shrink-0 gap-1.5">
-    <button type="button" onClick={onEdit} aria-label={`Edit ${name}`} className="btn px-3 py-1 text-sm">Edit</button>
-    <button type="button" onClick={onDelete} aria-label={`Delete ${name}`} className="btn px-3 py-1 text-sm">Delete</button>
+  <div className="flex shrink-0 gap-2 max-sm:w-full max-sm:pl-[60px]">
+    <button type="button" onClick={onEdit} aria-label={`Edit ${name}`} className="btn !min-h-11 px-4 text-sm">Edit</button>
+    <button type="button" onClick={onDelete} aria-label={`Delete ${name}`} className="btn !min-h-11 px-4 text-sm">Delete</button>
   </div>
 ) : null
 
-const Tag = ({ id }: { id: string }) => <span className={`chip shrink-0 ${isCustom(id) ? 'bg-butter' : ''}`}>{isCustom(id) ? 'Custom' : 'Built-in'}</span>
+/** Only Custom items get a tag: built-in is the default and needs no label. */
+const Tag = ({ id }: { id: string }) => isCustom(id) ? <span className="chip shrink-0 rotate-[-3deg] bg-butter">Custom</span> : null
+const row = (id: string) => `flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border-2 p-2.5 ${isCustom(id) ? 'border-ink bg-butter/25' : 'border-ink/15 bg-paper'}`
 
 const KINDS: MoveKind[] = ['warmup', 'cardio', 'strength', 'cooldown']
 const KIND_LABEL: Record<MoveKind, string> = { warmup: 'Warm-up', cardio: 'Cardio', strength: 'Strength', cooldown: 'Cool-down' }
@@ -153,8 +155,8 @@ function MoveForm({ initial, onSave, onCancel }: { initial?: Move; onSave: (m: C
 
 function MoveRow({ m, ...a }: { m: Move } & RowActions) {
   return (
-    <li className="flex items-center gap-3 rounded-2xl border-2 border-ink/15 bg-paper p-2.5">
-      {isCustom(m.id) ? <Plate emoji={m.emoji} color={KIND_COLOR[m.kind]} size={48} /> : <Plate art={<MoveArt id={m.id} />} color={KIND_COLOR[m.kind]} size={48} />}
+    <li className={row(m.id)}>
+      <MovePlate mv={m} size={48} />
       <div className="min-w-0 flex-1">
         <p className="truncate font-display text-lg font-semibold">{m.name}</p>
         <p className="text-sm font-bold text-ink-soft">{m.minutes[0] === m.minutes[1] ? m.minutes[0] : m.minutes.join('–')} min · {m.dose[0]}</p>
@@ -167,7 +169,7 @@ function MoveRow({ m, ...a }: { m: Move } & RowActions) {
 
 function MealRow({ m, ...a }: { m: Meal } & RowActions) {
   return (
-    <li className="flex items-center gap-3 rounded-2xl border-2 border-ink/15 bg-paper p-2.5">
+    <li className={row(m.id)}>
       <Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={48} />
       <div className="min-w-0 flex-1">
         <Link to={`/meal/${m.id}`} className="block truncate font-display text-lg font-semibold hover:underline">{m.name}</Link>
@@ -200,26 +202,33 @@ export default function Library() {
   }
   const isNew = editing === 'new'
   return (
-    <div className="wrap max-w-5xl pb-16 pt-2">
-      <div className="flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <h1 className="text-4xl font-bold sm:text-5xl">Library</h1>
-          <p className="mt-1 text-lg text-ink-soft">Every Meal and Move you can put in your Plan. Add your own.</p>
+    <div className="wrap pb-16 pt-2">
+      <div className="flex items-end gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-ink-soft sm:text-base">{cat.meals.length} Meals · {cat.moves.length} Moves</p>
+          <h1 className="text-4xl font-bold sm:text-6xl">Library</h1>
+          <p className="mt-1 text-base text-ink-soft sm:text-lg">Every Meal and Move you can put in your Plan. Add your own.</p>
         </div>
-        {!editing && <button type="button" onClick={() => open('new')} className="btn btn-ink">Add a {noun}</button>}
+        <span className="relative hidden shrink-0 sm:block">
+          <span className="absolute inset-x-2 bottom-1 top-6 rounded-full border-[2.5px] border-ink bg-sky" aria-hidden="true" />
+          <Mascot size={150} className="relative" />
+        </span>
       </div>
-      <div role="tablist" aria-label="Library" className="mt-5 flex gap-2">
-        {(['meals', 'moves'] as Tab[]).map((t) => (
-          <button key={t} type="button" role="tab" id={`tab-${t}`} aria-selected={tab === t} aria-controls="lib-panel" onClick={() => pick(t)} className={`btn ${tab === t ? 'btn-ink' : ''}`}>{t === 'meals' ? 'Meals' : 'Moves'}</button>
-        ))}
+      <div className="mt-5 flex items-center gap-2">
+        <div role="tablist" aria-label="Library" className="flex gap-2">
+          {(['meals', 'moves'] as Tab[]).map((t) => (
+            <button key={t} type="button" role="tab" id={`tab-${t}`} aria-selected={tab === t} aria-controls="lib-panel" onClick={() => pick(t)} className={`btn ${tab === t ? 'btn-ink' : ''}`}>{t === 'meals' ? 'Meals' : 'Moves'}</button>
+          ))}
+        </div>
+        {!editing && <button type="button" onClick={() => open('new')} aria-label={`Add a ${noun}`} className="btn btn-pink ml-auto"><span aria-hidden="true">+</span> Add<span className="max-sm:hidden"> a {noun}</span></button>}
       </div>
-      <p role="status" className="mt-3 font-bold">{status}</p>
+      <p role="status" className="mt-3 font-bold empty:mt-0">{status}</p>
       <div role="tabpanel" id="lib-panel" aria-labelledby={`tab-${tab}`}>
         {tab === 'meals' ? (<>
           {editing && <MealForm key={editing} initial={cat.meals.find((m) => m.id === editing)} onSave={(m) => { set(isNew ? addCustomMeal(m) : editCustomMeal(editing, m)); saved(m.name) }} onCancel={() => setEditing(null)} />}
           {SLOTS.map((slot) => (
             <section key={slot} className="mt-8" aria-labelledby={`lib-${slot}`}>
-              <h2 id={`lib-${slot}`} className="text-2xl font-bold">{SLOT_LABEL[slot]}</h2>
+              <h2 id={`lib-${slot}`} className="flex items-center gap-2 text-2xl font-bold"><span className={`size-4 rounded-full border-2 border-ink ${SLOT_COLOR[slot]}`} aria-hidden="true" />{SLOT_LABEL[slot]}</h2>
               <ul className="mt-3 grid gap-2 md:grid-cols-2">
                 {cat.meals.filter((m) => m.slot === slot).map((m) => <MealRow key={m.id} m={m} onEdit={() => open(m.id)} onDelete={() => remove(m.name, () => set(deleteCustomMeal(m.id)))} />)}
               </ul>
@@ -229,7 +238,7 @@ export default function Library() {
           {editing && <MoveForm key={editing} initial={cat.moves.find((m) => m.id === editing)} onSave={(m) => { set(isNew ? addCustomMove(m) : editCustomMove(editing, m)); saved(m.name) }} onCancel={() => setEditing(null)} />}
           {KINDS.map((kind) => (
             <section key={kind} className="mt-8" aria-labelledby={`lib-${kind}`}>
-              <h2 id={`lib-${kind}`} className="text-2xl font-bold">{KIND_LABEL[kind]}</h2>
+              <h2 id={`lib-${kind}`} className="flex items-center gap-2 text-2xl font-bold"><span className={`size-4 rounded-full border-2 border-ink ${KIND_COLOR[kind]}`} aria-hidden="true" />{KIND_LABEL[kind]}</h2>
               <ul className="mt-3 grid gap-2 md:grid-cols-2">
                 {cat.moves.filter((m) => m.kind === kind).map((m) => <MoveRow key={m.id} m={m} onEdit={() => open(m.id)} onDelete={() => remove(m.name, () => set(deleteCustomMove(m.id)))} />)}
               </ul>

@@ -33,7 +33,7 @@ describe('Library Moves tab', () => {
     expect(el.textContent).toContain('Jumping Jacks')
     expect(el.textContent).not.toContain('Custom')
 
-    await click([...el.querySelectorAll('button')].find((b) => b.textContent === 'Add a Move')!)
+    await click([...el.querySelectorAll('button')].find((b) => b.getAttribute('aria-label') === 'Add a Move')!)
     await type('move-name', '   ')
     await type('move-minutes', '20')
     await submit()

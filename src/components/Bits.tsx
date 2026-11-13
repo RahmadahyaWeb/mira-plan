@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 import type { Slot } from '../data/meals'
-import type { MoveKind } from '../data/exercises'
+import type { Move, MoveKind } from '../data/exercises'
+import MoveArt from './MoveArt'
+import { isCustom } from '../lib/catalog'
 
 export const SLOT_COLOR: Record<Slot, string> = { breakfast: 'bg-butter', lunch: 'bg-sky', snack: 'bg-lilac', dinner: 'bg-pink' }
 export const KIND_COLOR: Record<MoveKind, string> = { warmup: 'bg-butter', cardio: 'bg-pink', strength: 'bg-sky', cooldown: 'bg-lilac' }
@@ -46,3 +48,7 @@ export function Swoosh({ className = '', color = 'var(--color-pink-deep)' }: { c
 }
 
 export const fmt = (n: number) => Math.round(n).toLocaleString('en-US')
+
+/** A Move on its plate: Custom Moves show their own emoji, built-ins their drawing. */
+export const MovePlate = ({ mv, size }: { mv: Move; size: number }) =>
+  isCustom(mv.id) ? <Plate emoji={mv.emoji} color={KIND_COLOR[mv.kind]} size={size} /> : <Plate art={<MoveArt id={mv.id} />} color={KIND_COLOR[mv.kind]} size={size} />

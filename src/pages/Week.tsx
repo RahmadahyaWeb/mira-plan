@@ -58,7 +58,7 @@ export default function Week() {
         {days.map(({ key: k, day, index: dayIdx, progress: p }, i) => {
           const isToday = k === today
           return (
-            <li key={k}>
+            <li key={k} className="relative">
               <Link to={`/today/${k}`} aria-label={`Open ${prettyDay(k)}`}
                 className={`grid overflow-hidden rounded-3xl border-[2.5px] border-ink bg-paper transition-[transform,box-shadow] duration-150 hover:-translate-x-0.5 hover:-translate-y-0.5 hover:shadow-pop lg:grid-cols-[170px_1fr_320px] print:grid-cols-[110px_1fr_200px] ${isToday ? 'shadow-pop ring-4 ring-pink-deep ring-offset-2' : 'shadow-pop-sm'}`}>
                 <div className={`flex items-center justify-between gap-3 border-ink px-5 py-3 max-lg:border-b-[2.5px] lg:flex-col lg:items-start lg:justify-center lg:border-r-[2.5px] ${TOPS[i % 4]}`}>
@@ -86,7 +86,7 @@ export default function Week() {
                     )
                   })}
                 </ul>
-                <div className={`border-t-2 border-dashed border-ink/30 px-5 py-4 lg:border-l-2 lg:border-t-0 ${day.workout.rest ? 'bg-lilac/35' : 'bg-pink/25'}`}>
+                <div className={`border-t-2 border-dashed border-ink/30 px-5 pb-16 pt-4 lg:border-l-2 lg:border-t-0 ${day.workout.rest ? 'bg-lilac/35' : 'bg-pink/25'}`}>
                   <p className="flex items-center gap-2 font-display text-xl font-semibold"><span className={`grid size-9 place-items-center rounded-full border-2 border-ink p-1 ${day.workout.rest ? 'bg-lilac' : 'bg-pink'}`}><MoveArt id={day.workout.rest ? 'yoga' : day.workout.moves[1]} /></span>{day.workout.title}</p>
                   <ul className="mt-2 flex flex-wrap gap-1.5">
                     {day.workout.moves.slice(0, 3).map((id, j) => <li key={j} className="rounded-full border-2 border-ink bg-paper px-2.5 py-0.5 text-sm font-semibold">{cat.move(id).name}</li>)}
@@ -94,9 +94,7 @@ export default function Week() {
                   </ul>
                 </div>
               </Link>
-              <div className="no-print mt-2 flex justify-end">
-                <button type="button" onClick={() => setEditing(dayIdx)} aria-label={`Edit ${prettyDay(k)}`} className="btn !min-h-10 px-4 text-sm">Edit day</button>
-              </div>
+              <button type="button" onClick={() => setEditing(dayIdx)} aria-label={`Edit ${prettyDay(k)}`} className="btn no-print absolute bottom-3 right-3 !min-h-11 px-4 text-sm">Edit day</button>
             </li>
           )
         })}

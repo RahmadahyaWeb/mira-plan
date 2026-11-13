@@ -77,7 +77,7 @@ export default function MealPage() {
               const on = got.has(i)
               return (
                 <li key={i}>
-                  <button type="button" aria-pressed={on} onClick={() => setGot((g) => { const n = new Set(g); if (n.has(i)) n.delete(i); else n.add(i); return n })} className="flex w-full items-center gap-3 rounded-xl p-1.5 text-left hover:bg-butter/40">
+                  <button type="button" aria-pressed={on} onClick={() => setGot((g) => { const n = new Set(g); if (n.has(i)) n.delete(i); else n.add(i); return n })} className="flex min-h-11 w-full items-center gap-3 rounded-xl p-1.5 text-left hover:bg-butter/40">
                     <span className={`grid size-7 shrink-0 place-items-center rounded-lg border-[2.5px] border-ink ${on ? 'bg-pink-deep text-paper' : ''}`}>{on && <Check className="size-4" />}</span>
                     <span className={on ? 'line-through opacity-60' : ''}>{ing}</span>
                   </button>

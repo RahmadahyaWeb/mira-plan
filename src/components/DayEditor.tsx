@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import FoodArt from './FoodArt'
-import MoveArt from './MoveArt'
-import { Plate, SLOT_COLOR, SLOT_LABEL, KIND_COLOR, DISH, fmt } from './Bits'
+import { Plate, MovePlate, SLOT_COLOR, SLOT_LABEL, DISH, fmt } from './Bits'
 import { useStore } from '../store'
 import { catalog } from '../lib/catalog'
 import { dateKey } from '../lib/date'
@@ -40,7 +39,7 @@ export default function DayEditor({ dayIdx, pick: initial, onClose }: { dayIdx: 
     title = pick === 'add' ? 'Add a Move' : `Replace ${cat.move(day.workout.moves[pick.move]).name}`
     list = cat.moves.map((mv) => (
       <li key={mv.id}><button type="button" onClick={() => { set(pick === 'add' ? addMove(dayIdx, mv.id, today) : replaceMove(dayIdx, pick.move, mv.id, today)); setPick(null) }} className={row}>
-        <Plate art={<MoveArt id={mv.id} />} color={KIND_COLOR[mv.kind]} size={44} />
+        <MovePlate mv={mv} size={44} />
         <span className="min-w-0 flex-1 leading-tight"><span className="block font-display text-lg font-semibold">{mv.name}</span><span className="text-sm font-bold text-ink-soft"><span className="capitalize">{mv.kind}</span> · {mv.dose[profile.level]}</span></span>
       </button></li>
     ))
@@ -50,7 +49,7 @@ export default function DayEditor({ dayIdx, pick: initial, onClose }: { dayIdx: 
     <dialog ref={ref} onClose={onClose} aria-labelledby="day-editor-h" className="m-auto max-h-[85vh] w-[min(560px,calc(100vw-32px))] overflow-y-auto rounded-3xl border-[2.5px] border-ink bg-paper p-5 text-ink shadow-pop backdrop:bg-ink/40 sm:p-6">
       <div className="flex items-center justify-between gap-3">
         <h2 id="day-editor-h" className="text-2xl font-bold">{title}</h2>
-        <button type="button" onClick={() => (pick ? setPick(null) : ref.current?.close())} className="btn !min-h-10 px-4 text-sm">{pick ? 'Back' : 'Done'}</button>
+        <button type="button" onClick={() => (pick ? setPick(null) : ref.current?.close())} className="btn !min-h-11 shrink-0 px-4 text-sm">{pick ? 'Back' : 'Done'}</button>
       </div>
       {list ? <ul className="mt-4 space-y-2">{list}</ul> : <>
         <h3 className="mt-4 font-display text-lg font-semibold">Meals</h3>
@@ -60,7 +59,7 @@ export default function DayEditor({ dayIdx, pick: initial, onClose }: { dayIdx: 
             return <li key={i}><button type="button" onClick={() => setPick({ meal: i })} aria-label={`Change ${SLOT_LABEL[pm.slot]}: ${m.name}`} className={row}>
               <Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={44} />
               <span className="min-w-0 flex-1 leading-tight"><span className="block text-sm font-bold text-ink-soft">{SLOT_LABEL[pm.slot]}</span><span className="block font-display text-lg font-semibold">{m.name}</span></span>
-              <span className="text-sm font-bold text-ink-soft">Change</span>
+              <span className="shrink-0 rounded-full border-2 border-ink/25 px-3 py-1 text-sm font-bold text-ink-soft">Change</span>
             </button></li>
           })}
         </ul>
@@ -68,11 +67,13 @@ export default function DayEditor({ dayIdx, pick: initial, onClose }: { dayIdx: 
         <ul className="mt-2 space-y-2">
           {day.workout.moves.map((id, i) => {
             const mv = cat.move(id)
-            return <li key={i} className="flex items-center gap-3 rounded-2xl border-2 border-ink/15 p-2">
-              <Plate art={<MoveArt id={mv.id} />} color={KIND_COLOR[mv.kind]} size={44} />
+            return <li key={i} className="flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border-2 border-ink/15 p-2">
+              <MovePlate mv={mv} size={44} />
               <span className="min-w-0 flex-1 font-display text-lg font-semibold leading-tight">{mv.name}</span>
-              <button type="button" onClick={() => setPick({ move: i })} aria-label={`Replace ${mv.name}`} className="btn !min-h-10 px-3 text-sm">Replace</button>
-              <button type="button" onClick={() => set(removeMove(dayIdx, i, today))} aria-label={`Remove ${mv.name}`} className="btn !min-h-10 px-3 text-sm">Remove</button>
+              <span className="flex gap-2 max-sm:w-full max-sm:pl-[56px]">
+                <button type="button" onClick={() => setPick({ move: i })} aria-label={`Replace ${mv.name}`} className="btn !min-h-11 px-3 text-sm">Replace</button>
+                <button type="button" onClick={() => set(removeMove(dayIdx, i, today))} aria-label={`Remove ${mv.name}`} className="btn !min-h-11 px-3 text-sm">Remove</button>
+              </span>
             </li>
           })}
           {!day.workout.moves.length && <li className="text-ink-soft">No Moves: a full day off.</li>}

@@ -20,7 +20,7 @@ const b64 = (o) => Buffer.from(JSON.stringify(o)).toString('base64url')
 const exp = Math.floor(Date.now() / 1000) + 86400
 const user = { id: '00000000-0000-4000-8000-000000000001', aud: 'authenticated', role: 'authenticated', email: 'sam@example.test', user_metadata: { username: 'sam' }, app_metadata: {}, created_at: new Date().toISOString() }
 const session = { access_token: `${b64({ alg: 'HS256', typ: 'JWT' })}.${b64({ sub: user.id, exp, role: 'authenticated' })}.x`, refresh_token: 'fake', token_type: 'bearer', expires_in: 86400, expires_at: exp, user }
-const db = { plans: [], logs: [] }
+const db = { plans: [], logs: [] } // POST upserts merge columns, like Postgres
 await ctx.route((u) => u.hostname === sbHost, async (route) => {
   const r = route.request(), u = new URL(r.url()), m = u.pathname.match(/\/rest\/v1\/(\w+)/)
   const json = (body, status = 200) => route.fulfill({ status, contentType: 'application/json', body: JSON.stringify(body) })
@@ -30,19 +30,22 @@ await ctx.route((u) => u.hostname === sbHost, async (route) => {
   if (!m || !db[m[1]]) return route.abort()
   const t = m[1], key = t === 'plans' ? (x) => x.account_id : (x) => x.account_id + x.day
   if (r.method() === 'GET') return json(db[t])
-  if (r.method() === 'POST') { for (const row of [r.postDataJSON()].flat()) { db[t] = db[t].filter((x) => key(x) !== key(row)); db[t].push(row) } return route.fulfill({ status: 201, body: '' }) }
+  if (r.method() === 'POST') { for (const row of [r.postDataJSON()].flat()) { const was = db[t].find((x) => key(x) === key(row)); db[t] = db[t].filter((x) => x !== was); db[t].push({ ...was, ...row }) } return route.fulfill({ status: 201, body: '' }) }
   if (r.method() === 'DELETE') { const days = (u.searchParams.get('day') ?? '').replace(/^in\.\(|\)$/g, '').split(','); db.logs = db.logs.filter((x) => !days.includes(x.day)); return route.fulfill({ status: 204 }) }
   return route.abort()
 })
 const errors = []
 p.on('pageerror', (e) => errors.push(String(e)))
 p.on('console', (m) => { if (m.type() === 'error') errors.push(m.text()) })
-const a11y = {}
+const a11y = {}, taps = {} // taps: phone controls under 44px, text links under 24px (WCAG 2.2), links inside sentences excluded
 async function shot(name, { full = false } = {}) {
   await p.mouse.move(1, 1)
   await p.waitForTimeout(400)
   await p.screenshot({ path: `${out}/${name}.png`, fullPage: full })
   if (full) return
+  if (p.viewportSize().width < 500) taps[name] = await p.evaluate(() => [...document.querySelectorAll('a, button, input, select, textarea, [role=tab]')]
+    .filter((e) => { const r = e.getBoundingClientRect(), d = document.querySelector('dialog[open]'); return r.width && r.height && (!d || d.contains(e)) && Math.min(r.height, r.width) < (e.tagName === 'A' && !e.classList.contains('btn') ? 24 : 44) && !e.closest('p') })
+    .map((e) => { const r = e.getBoundingClientRect(); return `${(e.getAttribute('aria-label') || e.textContent).trim().slice(0, 30)} ${Math.round(r.width)}x${Math.round(r.height)}` }))
   await p.addScriptTag({ content: axe })
   a11y[name] = await p.evaluate(async () =>
     (await window.axe.run(document, { runOnly: ['wcag2a', 'wcag2aa'] })).violations.map((v) => `${v.id} x${v.nodes.length}: ${v.nodes[0].target.join(' ')}`))
@@ -82,6 +85,19 @@ await p.click('button[aria-label="3 glasses of water"]')
 await p.evaluate(() => window.scrollTo(0, 0))
 await shot('S04-today')
 await shot('S04-today-full', { full: true })
+await p.click('text=Edit day')
+await shot('S13-day-editor')
+await p.keyboard.press('Escape')
+
+await p.goto(`${base}/#/library`)
+await p.click('text=Add a Meal')
+await p.fill('#meal-name', 'Mango yogurt bowl')
+await shot('S12-library-form')
+for (const [k, v] of [['kcal', '320'], ['protein', '18'], ['carbs', '44'], ['fat', '8']]) await p.fill(`#meal-${k}`, v)
+await p.click('text=Save Meal')
+await p.evaluate(() => window.scrollTo(0, 0))
+await shot('S11-library')
+await shot('S11-library-full', { full: true })
 
 await p.goto(`${base}/#/week`)
 await shot('S06-week')
@@ -102,15 +118,29 @@ await p.goto(`${base}/#/today`)
 await shot('S05-today-mobile')
 await shot('S05-today-mobile-full', { full: true })
 hscroll.today = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
+await p.click('text=Edit day')
+await shot('S13m-day-editor-mobile')
+await p.keyboard.press('Escape')
+await p.goto(`${base}/#/library`)
+await shot('S11m-library-mobile')
+await shot('S11m-library-mobile-full', { full: true })
+hscroll.library = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
+await p.click('text=Add a Meal')
+await shot('S12m-library-form-mobile')
 await p.goto(`${base}/#/week`)
+await shot('S06m-week-mobile')
 hscroll.week = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
 await p.goto(`${base}/#/plan`)
+await shot('S03m-wizard-mobile')
 hscroll.plan = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
 await p.evaluate((k) => localStorage.removeItem(k), sbKey)
 await p.goto(`${base}/#/login`)
 await p.reload() // hash-only goto keeps the old page and its in-memory session
 await shot('S09m-login-mobile')
 hscroll.login = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
+await p.goto(`${base}/#/register`)
+await shot('S10m-register-mobile')
+hscroll.register = await p.evaluate(() => document.documentElement.scrollWidth > window.innerWidth)
 
 await b.close()
-console.log(JSON.stringify({ round, errors, hscrollMobile: hscroll, a11y }, null, 1))
+console.log(JSON.stringify({ round, errors, hscrollMobile: hscroll, a11y, taps }, null, 1))
