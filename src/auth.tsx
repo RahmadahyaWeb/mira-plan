@@ -37,10 +37,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
   const signIn: Auth['signIn'] = async (username, password) => {
     const fail = 'Wrong username or password.'
-    const { data: email } = await supabase.rpc('email_for_username', { u: normalizeUsername(username) })
-    if (!email) return fail
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
-    return error ? fail : null
+    // Server-side lookup (supabase/functions/sign-in) so Emails never reach the client.
+    const { data, error } = await supabase.functions.invoke('sign-in', { body: { username: normalizeUsername(username), password } })
+    if (error || !data?.access_token) return fail
+    const { error: sessionError } = await supabase.auth.setSession(data)
+    return sessionError ? fail : null
   }
   const signOut = async () => { await supabase.auth.signOut() }
 

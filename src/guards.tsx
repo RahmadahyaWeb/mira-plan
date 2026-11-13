@@ -5,7 +5,8 @@ import { useStore } from './store'
 /** Where a Visitor was headed before login; else Today, or the wizard if there is no Plan yet. */
 export function useAfterLogin(): string {
   const from = (useLocation().state as { from?: string } | null)?.from
-  return from ?? useHome()
+  const home = useHome()
+  return from ?? home
 }
 
 /** An Account's home: Today once it has a Plan, the wizard before. */

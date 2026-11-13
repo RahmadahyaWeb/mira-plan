@@ -28,12 +28,10 @@ language sql stable security definer set search_path = '' as $$
   select not exists (select 1 from public.accounts where lower(username) = lower(u));
 $$;
 
--- Sign-in: resolve one Username to its Email. Never lists Accounts.
-create function public.email_for_username(u text) returns text
-language sql stable security definer set search_path = '' as $$
-  select email from public.accounts where lower(username) = lower(u);
-$$;
+-- Sign-in resolves Username -> Email server-side in supabase/functions/sign-in (never exposed to clients).
 
-revoke all on function public.username_available(text), public.email_for_username(text) from public;
-grant execute on function public.username_available(text), public.email_for_username(text) to anon, authenticated;
+revoke all on function public.username_available(text) from public;
+grant execute on function public.username_available(text) to anon, authenticated;
 revoke all on function public.handle_new_user() from public;
+-- Supabase grants EXECUTE to these roles directly; the trigger fires without it.
+revoke execute on function public.handle_new_user() from anon, authenticated;
