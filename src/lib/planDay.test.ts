@@ -3,7 +3,7 @@ import { empty, noCustom, type State } from './accountData'
 import type { Profile } from './calc'
 import { addDays } from './date'
 import { fitScale, generatePlan } from './plan'
-import { addCustomMeal, addCustomMove, deleteCustomMeal, deleteCustomMove, drink, editCustomMeal, mealOnToday, planDay, planWeek, startPlan, swap, tick } from './planDay'
+import { addCustomMeal, addCustomMove, addMove, deleteCustomMeal, deleteCustomMove, drink, editCustomMeal, mealOnToday, mealOptions, planDay, planWeek, removeMove, replaceMove, setMeal, startPlan, swap, tick } from './planDay'
 import { catalog, isCustom } from './catalog'
 import { itemIds } from './track'
 import { MEAL_BY_ID, fitsDiet } from '../data/meals'
@@ -188,5 +188,120 @@ describe('editing and deleting Custom items', () => {
     expect(next.plan!.days.flatMap((d) => d.workout.moves)).not.toContain(id)
     expect(next.log[key].done.sort()).toEqual(['meal-1', 'move-0', 'move-1'])
     expect(next.log[later].done).toEqual(['move-1'])
+  })
+})
+
+describe('setMeal', () => {
+  const vegan = { ...profile, diet: 'vegan' as const }
+  const base: State = { profile: vegan, plan: generatePlan(vegan, start, 7), log: {}, custom: noCustom }
+  const day0 = base.plan!.days[0]
+  const pick = (slot: string, not: string[]) => catalog(base).meals.find((m) => m.slot === slot && fitsDiet(m, 'vegan') && !not.includes(m.id))!
+
+  it('puts the Meal in that position and recalculates the portion', () => {
+    const m = pick('breakfast', day0.meals.map((x) => x.id))
+    const next = setMeal(0, 0, m.id, start)(base)
+    expect(next.plan!.days[0].meals[0]).toEqual({ slot: 'breakfast', id: m.id })
+    expect(next.plan!.days[0].meals.length).toBe(day0.meals.length)
+    expect(next.plan!.days[0].scale).toBe(fitScale(next.plan!.days[0].meals, base.plan!.target, catalog(base)))
+    expect(next.plan!.days[1]).toBe(base.plan!.days[1])
+  })
+
+  it('refuses a Meal of another slot, one that does not fit the diet, or an unknown id', () => {
+    const lunch = pick('lunch', day0.meals.map((x) => x.id))
+    const meaty = catalog(base).meals.find((m) => m.slot === 'breakfast' && !fitsDiet(m, 'vegan'))!
+    expect(setMeal(0, 0, lunch.id, start)(base)).toBe(base)
+    expect(setMeal(0, 0, meaty.id, start)(base)).toBe(base)
+    expect(setMeal(0, 0, 'nope', start)(base)).toBe(base)
+    expect(setMeal(0, 99, lunch.id, start)(base)).toBe(base)
+  })
+
+  it('offers Built-in and Custom Meals of that slot that fit the diet', () => {
+    const added = addCustomMeal({ name: 'Nasi Uduk', slot: 'breakfast', emoji: '🍚', kcal: 900, protein: 10, carbs: 70, fat: 14, diet: 'vegan', minutes: 0, ingredients: [], steps: [] })(base)
+    const opts = mealOptions(added, 0, 0)
+    expect(opts[0].name).toBe('Nasi Uduk')
+    expect(opts.length).toBeGreaterThan(1)
+    expect(opts.every((m) => m.slot === 'breakfast' && fitsDiet(m, 'vegan'))).toBe(true)
+  })
+
+  it('takes a Custom Meal of the same slot and diet', () => {
+    const added = addCustomMeal({ name: 'Nasi Uduk', slot: 'breakfast', emoji: '🍚', kcal: 900, protein: 10, carbs: 70, fat: 14, diet: 'vegan', minutes: 0, ingredients: [], steps: [] })(base)
+    const id = added.custom.meals[0].id
+    const next = setMeal(0, 0, id, start)(added)
+    expect(next.plan!.days[0].meals[0].id).toBe(id)
+    expect(next.plan!.days[0].scale).toBeLessThan(base.plan!.days[0].scale)
+  })
+
+  it('unticks the replaced meal only on today when today falls on that Plan day', () => {
+    const m = pick('breakfast', day0.meals.map((x) => x.id))
+    const past = addDays(start, 7)
+    const today = addDays(start, 14)
+    const later = addDays(start, 21)
+    const ticked = [tick(past, 'meal-0'), tick(today, 'meal-0'), tick(today, 'meal-1'), tick(today, 'move-0'), tick(later, 'meal-0')].reduce((acc, f) => f(acc), base)
+    const next = setMeal(0, 0, m.id, today)(ticked)
+    expect(next.log[today].done).toEqual(['meal-1', 'move-0'])
+    expect(next.log[past]).toBe(ticked.log[past])
+    expect(next.log[later]).toBe(ticked.log[later])
+    // today on another Plan day, or before the Plan starts: log untouched
+    expect(setMeal(0, 0, m.id, addDays(start, 15))(ticked).log).toBe(ticked.log)
+    expect(setMeal(0, 0, m.id, addDays(start, -7))(ticked).log).toBe(ticked.log)
+  })
+
+  it('swap to next still lands on a Built-in Meal, even from a Custom one', () => {
+    const added = addCustomMeal({ name: 'Nasi Uduk', slot: 'breakfast', emoji: '🍚', kcal: 450, protein: 10, carbs: 70, fat: 14, diet: 'vegan', minutes: 0, ingredients: [], steps: [] })(base)
+    const withIt = setMeal(0, 0, added.custom.meals[0].id, start)(added)
+    expect(isCustom(swap(0, 0)(withIt).plan!.days[0].meals[0].id)).toBe(false)
+  })
+})
+
+describe('editing a workout', () => {
+  const salsa = { name: 'Salsa', kind: 'cardio' as const, intensity: 'hard' as const, minutes: 20, emoji: '', dose: '', how: '' }
+  const withSalsa = addCustomMove(salsa)(fresh)
+  const sid = withSalsa.custom.moves[0].id
+  const work = plan.days.findIndex((d) => !d.workout.rest && d.workout.moves.length > 2)
+  const rest = plan.days.findIndex((d) => d.workout.rest)
+  const moves = (s: State, d: number) => s.plan!.days[d].workout.moves
+
+  it('adds a Move at the end, on a rest day too, keeping title and rest flag', () => {
+    const end = addMove(rest, sid, start)(withSalsa)
+    expect(moves(end, rest)).toEqual([...plan.days[rest].workout.moves, sid])
+    expect(end.plan!.days[rest].workout.rest).toBe(true)
+    expect(end.plan!.days[rest].workout.title).toBe(plan.days[rest].workout.title)
+    expect(addMove(work, 'nope', start)(fresh)).toBe(fresh)
+  })
+
+  it('removes and replaces Moves; replace takes any kind', () => {
+    const orig = plan.days[work].workout.moves
+    expect(moves(removeMove(work, 1, start)(fresh), work)).toEqual(orig.toSpliced(1, 1))
+    expect(moves(replaceMove(work, 0, sid, start)(withSalsa), work)).toEqual(orig.with(0, sid))
+    expect(removeMove(work, 99, start)(fresh)).toBe(fresh)
+    expect(replaceMove(work, 0, 'nope', start)(fresh)).toBe(fresh)
+  })
+
+  it('a workout can be emptied; progress and burned kcal still work', () => {
+    const n = plan.days[work].workout.moves.length
+    const empty = Array.from({ length: n }, () => removeMove(work, 0, start)).reduce((acc, f) => f(acc), fresh)
+    expect(moves(empty, work)).toEqual([])
+    const key = addDays(start, work)
+    const d = planDay(ready(tick(key, 'meal-0')(empty)), key)
+    expect(d.burned).toBe(0)
+    expect(d.progress).toEqual({ done: 1, total: d.day.meals.length, ratio: 1 / d.day.meals.length })
+  })
+
+  it("today's ticks follow their items; removed or replaced Moves are unticked; other dates untouched", () => {
+    const today = addDays(start, work + 7)
+    const past = addDays(start, work)
+    const later = addDays(today, 7)
+    const ticked = [tick(today, 'move-0'), tick(today, 'move-1'), tick(today, 'move-2'), tick(today, 'meal-0'), tick(past, 'move-1'), tick(later, 'move-2')].reduce((acc, f) => f(acc), fresh)
+    const sorted = (s: State) => [...s.log[today].done].sort()
+    expect(sorted(addMove(work, 'jog', today)(ticked))).toEqual(['meal-0', 'move-0', 'move-1', 'move-2'])
+    expect(sorted(removeMove(work, 1, today)(ticked))).toEqual(['meal-0', 'move-0', 'move-1'])
+    expect(sorted(replaceMove(work, 1, 'jog', today)(ticked))).toEqual(['meal-0', 'move-0', 'move-2'])
+    for (const f of [addMove(work, 'jog', today), removeMove(work, 0, today), replaceMove(work, 0, 'jog', today)]) {
+      const next = f(ticked)
+      expect(next.log[past]).toBe(ticked.log[past])
+      expect(next.log[later]).toBe(ticked.log[later])
+    }
+    // edit on a Plan day today does not fall on: log untouched
+    expect(removeMove(work, 0, addDays(today, 1))(ticked).log).toBe(ticked.log)
   })
 })

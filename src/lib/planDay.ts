@@ -4,7 +4,7 @@ import { addDays, daysBetween, planDayIndex } from './date'
 import { fitScale, swapMeal, type Plan, type PlanDay } from './plan'
 import { dayFor, progress, type Log } from './track'
 import { catalog, newCustomId } from './catalog'
-import type { Meal } from '../data/meals'
+import { fitsDiet, type Meal } from '../data/meals'
 import type { Move, MoveKind } from '../data/exercises'
 
 /** Account data once it has a Profile and a Plan. */
@@ -83,6 +83,68 @@ export const drink = (key: string, i: number): Update => (s) => {
 
 export const swap = (dayIdx: number, mealIdx: number): Update => (s) =>
   s.plan && s.profile ? { ...s, plan: swapMeal(s.plan, dayIdx, mealIdx, s.profile.diet, catalog(s)) } : s
+
+/**
+ * Ticks are stored by position, so a Plan day edit remaps today's ticks of `prefix`:
+ * `map(i)` is old item i's new index, or null when it is gone (and loses its tick).
+ * Only today's entry changes, and only when today falls on that Plan day.
+ */
+function remapToday(s: State, dayIdx: number, today: string, prefix: 'meal-' | 'move-', map: (i: number) => number | null): Log {
+  const { plan, log } = s
+  const d = log[today]
+  if (!plan || !d || daysBetween(plan.startKey, today) < 0 || planDayIndex(plan.startKey, today) !== dayIdx) return log
+  const done = d.done.flatMap((t) => {
+    if (!t.startsWith(prefix)) return [t]
+    const n = map(Number(t.slice(prefix.length)))
+    return n === null ? [] : [prefix + n]
+  })
+  return { ...log, [today]: { ...d, done } }
+}
+
+/** The Meals that may go in one meal position: Built-in and Custom, same slot, fitting the diet. */
+export function mealOptions(s: State, dayIdx: number, mealIdx: number): Meal[] {
+  const cur = s.plan?.days[dayIdx]?.meals[mealIdx]
+  const diet = s.profile?.diet
+  return cur && diet ? catalog(s).meals.filter((m) => m.slot === cur.slot && fitsDiet(m, diet)) : []
+}
+
+/** Put Meal `mealId` in one meal position of one Plan day. Refuses any Meal not in `mealOptions`. */
+export const setMeal = (dayIdx: number, mealIdx: number, mealId: string, today: string): Update => (s) => {
+  const day = s.plan?.days[dayIdx]
+  if (!s.plan || !day || day.meals[mealIdx]?.id === mealId || !mealOptions(s, dayIdx, mealIdx).some((m) => m.id === mealId)) return s
+  const meals = day.meals.map((m, i) => (i === mealIdx ? { ...m, id: mealId } : m))
+  const days = s.plan.days.map((d, i) => (i === dayIdx ? { ...d, meals, scale: fitScale(meals, s.plan!.target, catalog(s)) } : d))
+  return { ...s, plan: { ...s.plan, days }, log: remapToday(s, dayIdx, today, 'meal-', (i) => (i === mealIdx ? null : i)) }
+}
+
+/** Change one Plan day's workout; `map` says where each old Move went (null: gone). Title and rest flag stay. */
+function setMoves(s: State, dayIdx: number, moves: string[], today: string, map: (i: number) => number | null): State {
+  const days = s.plan!.days.map((d, i) => (i === dayIdx ? { ...d, workout: { ...d.workout, moves } } : d))
+  return { ...s, plan: { ...s.plan!, days }, log: remapToday(s, dayIdx, today, 'move-', map) }
+}
+
+const workoutOf = (s: State, dayIdx: number) => s.plan?.days[dayIdx]?.workout.moves
+
+/** Add Move `moveId` at the end of one Plan day's workout, so no tick has to move. Any kind, rest days too. */
+export const addMove = (dayIdx: number, moveId: string, today: string): Update => (s) => {
+  const moves = workoutOf(s, dayIdx)
+  if (!moves || !catalog(s).move(moveId)) return s
+  return setMoves(s, dayIdx, [...moves, moveId], today, (i) => i)
+}
+
+/** Take Move `moveIdx` out of one Plan day's workout; the workout may become empty. */
+export const removeMove = (dayIdx: number, moveIdx: number, today: string): Update => (s) => {
+  const moves = workoutOf(s, dayIdx)
+  if (!moves || moveIdx < 0 || moveIdx >= moves.length) return s
+  return setMoves(s, dayIdx, moves.toSpliced(moveIdx, 1), today, (i) => (i === moveIdx ? null : i < moveIdx ? i : i - 1))
+}
+
+/** Put Move `moveId` in place of Move `moveIdx`; the replaced one loses today's tick. */
+export const replaceMove = (dayIdx: number, moveIdx: number, moveId: string, today: string): Update => (s) => {
+  const moves = workoutOf(s, dayIdx)
+  if (!moves || moveIdx < 0 || moveIdx >= moves.length || !catalog(s).move(moveId) || moves[moveIdx] === moveId) return s
+  return setMoves(s, dayIdx, moves.with(moveIdx, moveId), today, (i) => (i === moveIdx ? null : i))
+}
 
 /** Add a Custom Meal to the Account's Library. */
 export const addCustomMeal = (meal: Omit<Meal, 'id'>): Update => (s) => ({

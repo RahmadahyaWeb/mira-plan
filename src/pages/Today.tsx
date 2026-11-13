@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import MoveArt from '../components/MoveArt'
 import { Link, useParams } from 'react-router-dom'
 import Mascot from '../components/Mascot'
@@ -12,6 +13,7 @@ import { WATER_GOAL, drink, planDay, swap, tick } from '../lib/planDay'
 import { type Slot } from '../data/meals'
 import { catalog } from '../lib/catalog'
 import NoPlan from '../components/NoPlan'
+import DayEditor, { type Choosing } from '../components/DayEditor'
 
 const ROW: Record<Slot, string> = { breakfast: 'bg-butter/25', lunch: 'bg-sky/20', snack: 'bg-lilac/25', dinner: 'bg-pink/20' }
 const ROW_ON: Record<Slot, string> = { breakfast: 'bg-butter/70', lunch: 'bg-sky/60', snack: 'bg-lilac/70', dinner: 'bg-pink/60' }
@@ -37,6 +39,7 @@ function cheer(ratio: number, rest: boolean, name: string) {
 export default function Today() {
   const { state, set } = useStore()
   const params = useParams()
+  const [editing, setEditing] = useState<Choosing | undefined>() // undefined: panel closed
   const today = dateKey()
   const key = params.key ?? today
   const { plan, profile, log } = state
@@ -96,11 +99,16 @@ export default function Today() {
                       <p className="flex items-center gap-2 text-base font-bold text-ink-soft"><span className="whitespace-nowrap">{SLOT_LABEL[m.slot]} · {fmt(m.kcal * day.scale)} kcal</span>{on && <span className="animate-pop rounded-full bg-ink px-2 py-px text-xs font-extrabold text-paper">Done</span>}</p>
                       <Link to={`/meal/${m.id}`} className={`block font-display text-lg font-semibold leading-tight hover:underline sm:text-2xl `}>{m.name}</Link>
                       <button type="button" onClick={() => set(swap(dayIdx, i))} className="mt-1 inline-flex items-center gap-1 rounded-full py-0.5 text-sm font-bold text-ink-soft sm:hidden"><Swap className="size-4" />Swap</button>
+                      <button type="button" onClick={() => setEditing({ meal: i })} className="ml-3 mt-1 inline-flex items-center gap-1 rounded-full py-0.5 text-sm font-bold text-ink-soft sm:hidden">Pick</button>
                       <p className="mt-0.5 hidden items-center gap-1 text-base font-semibold text-ink-soft sm:flex"><Clock />{m.minutes} min · P {Math.round(m.protein * day.scale)} · C {Math.round(m.carbs * day.scale)} · F {Math.round(m.fat * day.scale)}</p>
                     </div>
                     <button type="button" onClick={() => set(swap(dayIdx, i))} aria-label={`Swap ${m.name}`} title="Swap for another meal"
                       className="grid size-11 shrink-0 place-items-center rounded-full border-2 border-ink/25 bg-paper max-sm:hidden text-ink-soft transition-colors hover:border-ink hover:bg-sky hover:text-ink">
                       <Swap />
+                    </button>
+                    <button type="button" onClick={() => setEditing({ meal: i })} aria-label={`Pick another ${SLOT_LABEL[m.slot].toLowerCase()} instead of ${m.name}`} title="Pick a Meal"
+                      className="h-11 shrink-0 rounded-full border-2 border-ink/25 bg-paper px-3 text-sm font-bold max-sm:hidden text-ink-soft transition-colors hover:border-ink hover:bg-butter hover:text-ink">
+                      Pick
                     </button>
                     <Tick on={on} label={m.name} onClick={() => toggle(id)} />
                   </li>
@@ -114,6 +122,7 @@ export default function Today() {
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 id="move-h" className="px-2 pt-1 text-2xl font-bold sm:p-0 sm:text-3xl">{day.workout.title}</h2>
               <span className="chip bg-sky">{day.workout.moves.reduce((s, id) => s + cat.move(id).minutes[profile.level], 0)} min{day.workout.rest ? ' · easy day' : ''}</span>
+              <button type="button" onClick={() => setEditing(null)} className="btn !min-h-10 px-4 text-sm">Edit day</button>
             </div>
             <ul className="mt-4 space-y-3">
               {day.workout.moves.map((mid, i) => {
@@ -132,6 +141,7 @@ export default function Today() {
                   </li>
                 )
               })}
+              {!day.workout.moves.length && <li className="px-2 text-ink-soft">No Moves today: a full day off.</li>}
             </ul>
           </section>
         </div>
@@ -194,6 +204,7 @@ export default function Today() {
         </aside>
 
       </div>
+      {editing !== undefined && <DayEditor dayIdx={dayIdx} pick={editing} onClose={() => setEditing(undefined)} />}
     </div>
   )
 }

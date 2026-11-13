@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import MoveArt from '../components/MoveArt'
 import { Link } from 'react-router-dom'
 import Ring from '../components/Ring'
@@ -10,11 +11,13 @@ import { useStore } from '../store'
 import { dateKey, prettyDay } from '../lib/date'
 import { planWeek } from '../lib/planDay'
 import { catalog } from '../lib/catalog'
+import DayEditor from '../components/DayEditor'
 
 const TOPS = ['bg-pink', 'bg-sky', 'bg-butter', 'bg-lilac']
 
 export default function Week() {
   const { state } = useStore()
+  const [editing, setEditing] = useState<number | null>(null)
   const { plan, profile } = state
   if (!plan || !profile) return <NoPlan />
   const cat = catalog(state)
@@ -52,7 +55,7 @@ export default function Week() {
       </div>
 
       <ol className="mt-10 space-y-5">
-        {days.map(({ key: k, day, progress: p }, i) => {
+        {days.map(({ key: k, day, index: dayIdx, progress: p }, i) => {
           const isToday = k === today
           return (
             <li key={k}>
@@ -91,10 +94,14 @@ export default function Week() {
                   </ul>
                 </div>
               </Link>
+              <div className="no-print mt-2 flex justify-end">
+                <button type="button" onClick={() => setEditing(dayIdx)} aria-label={`Edit ${prettyDay(k)}`} className="btn !min-h-10 px-4 text-sm">Edit day</button>
+              </div>
             </li>
           )
         })}
       </ol>
+      {editing !== null && <DayEditor dayIdx={editing} pick={null} onClose={() => setEditing(null)} />}
     </div>
   )
 }
