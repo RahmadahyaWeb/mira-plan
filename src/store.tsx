@@ -16,10 +16,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const { account } = useAuth()
   const id = account?.id
   const [state, setState] = useState(empty)
-  const [loading, setLoading] = useState(true)
+  const [loadedFor, setLoadedFor] = useState<string | undefined>()
   const [error, setError] = useState<string | null>(null)
+  const loading = !!id && loadedFor !== id // derived, so no render shows another Account's data
   const ref = useRef(empty)
   const queue = useRef(Promise.resolve())
+  const idNow = useRef(id)
+  idNow.current = id
+  const loaded = useRef(false) // a failed load must never be followed by a save: it would overwrite the cloud row with blanks
 
   useEffect(() => {
     // Old device-only data is dropped, never imported.
@@ -29,16 +33,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let stale = false
     ref.current = empty
+    loaded.current = false
     setState(empty)
     setError(null)
-    if (!id) { setLoading(false); return }
-    setLoading(true)
+    if (!id) return
     supabase.from('plans').select('profile, plan').eq('account_id', id).maybeSingle().then(({ data, error: e }) => {
       if (stale) return
       if (e) setError('Could not load your plan. Check your connection and reload.')
-      else ref.current = { ...empty, profile: data?.profile ?? null, plan: data?.plan ?? null }
+      else {
+        loaded.current = true
+        ref.current = { ...empty, profile: data?.profile ?? null, plan: data?.plan ?? null }
+      }
       setState(ref.current)
-      setLoading(false)
+      setLoadedFor(id)
     })
     return () => { stale = true }
   }, [id])
@@ -48,15 +55,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     const next = fn(prev)
     ref.current = next
     setState(next)
-    if (!id || (prev.profile === next.profile && prev.plan === next.plan)) return
+    if (!id || !loaded.current || (prev.profile === next.profile && prev.plan === next.plan)) return
     // Saves run one at a time so the last change wins; a failure keeps the banner until a later save works.
     queue.current = queue.current.then(async () => {
       const { error: e } = await supabase.from('plans').upsert({ account_id: id, profile: next.profile, plan: next.plan, updated_at: new Date().toISOString() })
+      if (idNow.current !== id) return // signed out or switched meanwhile
       setError(e ? 'Could not save your changes. They are kept on this screen; we will retry on your next change.' : null)
     })
   }
 
-  return <Ctx.Provider value={{ state, set, loading, error }}>{children}</Ctx.Provider>
+  return <Ctx.Provider value={{ state: loading ? empty : state, set, loading, error }}>{children}</Ctx.Provider>
 }
 
 export function useStore() {
