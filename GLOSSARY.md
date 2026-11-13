@@ -27,3 +27,5 @@
 **Custom**: A Meal or Move an Account made itself. Only that Account sees it. The Account can edit or delete it any time. Part of Account data.
 
 **Library**: The place where an Account sees every Meal and Move it can use: all Built-in ones plus its own Custom ones. Custom ones are added, edited and deleted here.
+
+**Remake**: Building a fresh Plan from an edited Profile. Drops all Plan day edits and the Log from today onward. Past Log stays.

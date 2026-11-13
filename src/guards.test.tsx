@@ -15,7 +15,7 @@ const Where = ({ name }: { name: string }) => {
   return <p data-testid="where">{name}|{l.pathname}|{(l.state as { from?: string } | null)?.from ?? ''}</p>
 }
 
-async function visit(entry: string | { pathname: string; state: unknown }, auth: { signedIn: boolean; loading?: boolean; dataLoading?: boolean }) {
+async function visit(entry: string | { pathname: string; state: unknown }, auth: { signedIn: boolean; loading?: boolean; dataLoading?: boolean; hasPlan?: boolean }) {
   const value = {
     account: auth.signedIn ? { id: '1', username: 'mira' } : null,
     loading: auth.loading ?? false,
@@ -24,7 +24,7 @@ async function visit(entry: string | { pathname: string; state: unknown }, auth:
   await act(async () => {
     createRoot(el).render(
       <Ctx.Provider value={value}>
-        <StoreCtx.Provider value={{ loading: auth.dataLoading ?? false } as never}>
+        <StoreCtx.Provider value={{ loading: auth.dataLoading ?? false, state: { plan: auth.hasPlan ? {} : null } } as never}>
         <MemoryRouter initialEntries={[entry]}>
           <Path />
           <Routes>
@@ -52,8 +52,14 @@ describe('route guards', () => {
   it('lets an Account into a protected page', async () => {
     expect(await visit('/today', { signedIn: true })).toBe('[/today]today|/today|')
   })
-  it('sends a signed-in Account away from login to the plan', async () => {
+  it('sends a signed-in Account with no Plan away from login to the wizard', async () => {
     expect(await visit('/login', { signedIn: true })).toBe('[/plan]plan|/plan|')
+  })
+  it('sends a signed-in Account with a Plan away from login to Today', async () => {
+    expect(await visit('/login', { signedIn: true, hasPlan: true })).toBe('[/today]today|/today|')
+  })
+  it('waits for Account data before leaving login', async () => {
+    expect(await visit('/login', { signedIn: true, dataLoading: true })).toBe('[/login]')
   })
   it('returns an Account who just signed in to the remembered page', async () => {
     expect(await visit({ pathname: '/login', state: { from: '/today' } }, { signedIn: true })).toBe('[/today]today|/today|')

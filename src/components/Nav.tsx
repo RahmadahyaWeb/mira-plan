@@ -1,6 +1,6 @@
 import { NavLink, Link, useLocation } from 'react-router-dom'
 import Mascot from './Mascot'
-import { Book, Calendar, CheckCircle, Flame, Sparkle } from './Icons'
+import { Book, Calendar, CheckCircle, Flame } from './Icons'
 import { streak } from '../lib/track'
 import { dateKey } from '../lib/date'
 import { useStore } from '../store'
@@ -10,7 +10,6 @@ const links = [
   { to: '/today', label: 'Today', Icon: CheckCircle },
   { to: '/week', label: 'Week', Icon: Calendar },
   { to: '/library', label: 'Library', Icon: Book },
-  { to: '/plan', label: 'My plan', Icon: Sparkle },
 ]
 
 export default function Nav() {
@@ -57,9 +56,9 @@ export default function Nav() {
         </div>
       </header>
       {/* phone tab bar, app pages only */}
-      {account && !onLanding && <nav aria-label="Tabs" className="no-print fixed inset-x-3 bottom-3 z-30 grid grid-cols-4 gap-1 rounded-full border-[2.5px] border-ink bg-paper p-1.5 shadow-[4px_4px_0_0_var(--color-ink),0_6px_0_12px_var(--color-paper)] md:hidden">
+      {account && !onLanding && <nav aria-label="Tabs" className="no-print fixed inset-x-3 bottom-3 z-30 grid grid-cols-3 gap-1 rounded-full border-[2.5px] border-ink bg-paper p-1.5 shadow-[4px_4px_0_0_var(--color-ink),0_6px_0_12px_var(--color-paper)] md:hidden">
         {links.map((l) => (
-          <NavLink key={l.to} to={l.to} className={({ isActive }) => `flex min-h-12 items-center justify-center gap-1.5 rounded-full font-display font-semibold ${isActive ? 'bg-butter' : ''}`}>
+          <NavLink key={l.to} to={l.to} className={({ isActive }) => `flex min-h-12 flex-col items-center justify-center gap-0.5 whitespace-nowrap rounded-full font-display text-sm font-semibold leading-none ${isActive ? 'bg-butter' : ''}`}>
             <l.Icon className="size-5" />{l.label}
           </NavLink>
         ))}

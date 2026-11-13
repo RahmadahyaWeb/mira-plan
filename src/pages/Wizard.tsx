@@ -60,6 +60,7 @@ export default function Wizard() {
   const nav = useNavigate()
   const [p, setP] = useState<Profile>(state.profile ?? blank)
   const [step, setStep] = useState(0)
+  const [confirming, setConfirming] = useState(false)
   const up = <K extends keyof Profile>(k: K) => (v: Profile[K]) => setP((x) => ({ ...x, [k]: v }))
 
   const steps: { say: ReactNode; title: string; body: ReactNode; valid?: boolean }[] = [
@@ -165,7 +166,7 @@ export default function Wizard() {
     </div>
     <div className="wrap max-w-4xl pb-16 pt-4">
       {/* progress track with mascot riding along */}
-      <div className="relative mx-auto mb-10 mt-6 h-5 max-w-2xl rounded-full border-[2.5px] border-ink bg-paper" role="progressbar" aria-label="Plan setup progress" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
+      <div className="relative mx-6 mb-10 mt-6 h-5 max-w-2xl md:mx-auto rounded-full border-[2.5px] border-ink bg-paper" role="progressbar" aria-label="Plan setup progress" aria-valuenow={Math.round(pct)} aria-valuemin={0} aria-valuemax={100}>
         <div className="h-full rounded-full bg-pink-deep transition-[width] duration-500" style={{ width: `${pct}%` }} />
         <div className="absolute top-1/2 -translate-x-1/2 -translate-y-1/2 transition-[left] duration-500" style={{ left: `${pct}%` }}>
           <span className="grid size-12 place-items-center overflow-hidden rounded-full border-[2.5px] border-ink bg-sky shadow-pop-sm"><Mascot size={44} view="head" hopKey={step} /></span>
@@ -207,12 +208,17 @@ export default function Wizard() {
           </>
         )}
 
+        {confirming && (
+          <p role="alert" className="mt-6 rounded-2xl border-[2.5px] border-ink bg-pink/40 p-4 font-semibold">
+            This replaces your current plan. Your Plan day changes and today&apos;s ticks will be lost. Past days stay.
+          </p>
+        )}
         <div className="mt-9 flex items-center justify-between gap-3">
-          <button type="button" onClick={() => (step === 0 ? nav(-1) : setStep(step - 1))} className="btn"><ArrowLeft />Back</button>
+          <button type="button" onClick={() => { setConfirming(false); if (step === 0) nav(-1); else setStep(step - 1) }} className="btn"><ArrowLeft />Back</button>
           {!last ? (
             <button type="button" disabled={steps[step].valid === false} onClick={() => setStep(step + 1)} className="btn btn-ink disabled:opacity-40">Next<ArrowRight /></button>
           ) : (
-            <button type="button" onClick={finish} className="btn btn-ink !px-8">{state.plan ? 'Make my new plan' : 'Start my plan'} ✨</button>
+            <button type="button" onClick={state.plan && !confirming ? () => setConfirming(true) : finish} className="btn btn-ink !px-8">{confirming ? 'Yes, remake it' : state.plan ? 'Make my new plan' : 'Start my plan'} ✨</button>
           )}
         </div>
       </section>

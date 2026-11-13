@@ -7,6 +7,7 @@ import Ring from '../components/Ring'
 import { Plate, Swoosh, SLOT_COLOR, DISH, SLOT_LABEL, KIND_COLOR, fmt } from '../components/Bits'
 import { Check, Flame } from '../components/Icons'
 import { useAuth } from '../auth'
+import { useHome } from '../guards'
 import { generatePlan } from '../lib/plan'
 import { MEALS } from '../data/meals'
 import { catalog } from '../lib/catalog'
@@ -52,7 +53,8 @@ const steps = [
 ]
 
 export default function Landing() {
-  const entry = useAuth().account ? '/plan' : '/register'
+  const home = useHome()
+  const entry = useAuth().account ? home : '/register'
   return (
     <>
       {/* hero: stacked on phones, two columns on laptops, centered with flanking art on wide screens */}
