@@ -9,8 +9,7 @@ import NoPlan from '../components/NoPlan'
 import { useStore } from '../store'
 import { dateKey, prettyDay } from '../lib/date'
 import { planWeek } from '../lib/planDay'
-import { MEAL_BY_ID } from '../data/meals'
-import { MOVE_BY_ID } from '../data/exercises'
+import { catalog } from '../lib/catalog'
 
 const TOPS = ['bg-pink', 'bg-sky', 'bg-butter', 'bg-lilac']
 
@@ -18,6 +17,7 @@ export default function Week() {
   const { state } = useStore()
   const { plan, profile, log } = state
   if (!plan || !profile) return <NoPlan />
+  const cat = catalog(state)
   const today = dateKey()
   const { days, done: weekDone, total: weekTotal, mealCount, moveDays } = planWeek({ plan, profile, log }, today)
   return (
@@ -71,7 +71,7 @@ export default function Week() {
                 </div>
                 <ul className="grid content-center gap-x-6 gap-y-4 px-5 py-4 sm:grid-cols-2">
                   {day.meals.map((pm, j) => {
-                    const m = MEAL_BY_ID[pm.id]
+                    const m = cat.meal(pm.id)
                     return (
                       <li key={j} className="flex min-w-0 items-center gap-2.5">
                         <Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={52} />
@@ -86,7 +86,7 @@ export default function Week() {
                 <div className={`border-t-2 border-dashed border-ink/30 px-5 py-4 lg:border-l-2 lg:border-t-0 ${day.workout.rest ? 'bg-lilac/35' : 'bg-pink/25'}`}>
                   <p className="flex items-center gap-2 font-display text-xl font-semibold"><span className={`grid size-9 place-items-center rounded-full border-2 border-ink p-1 ${day.workout.rest ? 'bg-lilac' : 'bg-pink'}`}><MoveArt id={day.workout.rest ? 'yoga' : day.workout.moves[1]} /></span>{day.workout.title}</p>
                   <ul className="mt-2 flex flex-wrap gap-1.5">
-                    {day.workout.moves.slice(0, 3).map((id, j) => <li key={j} className="rounded-full border-2 border-ink bg-paper px-2.5 py-0.5 text-sm font-semibold">{MOVE_BY_ID[id].name}</li>)}
+                    {day.workout.moves.slice(0, 3).map((id, j) => <li key={j} className="rounded-full border-2 border-ink bg-paper px-2.5 py-0.5 text-sm font-semibold">{cat.move(id).name}</li>)}
                     {day.workout.moves.length > 3 && <li className="rounded-full border-2 border-dashed border-ink/50 px-2.5 py-0.5 text-sm font-semibold">+{day.workout.moves.length - 3} more</li>}
                   </ul>
                 </div>

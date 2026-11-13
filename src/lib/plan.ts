@@ -1,5 +1,6 @@
-import { MEALS, MEAL_BY_ID, fitsDiet, type Diet, type Slot } from '../data/meals'
-import { MOVE_BY_ID, movesOf, type MoveKind } from '../data/exercises'
+import { MEALS, fitsDiet, type Diet, type Slot } from '../data/meals'
+import { movesOf, type MoveKind } from '../data/exercises'
+import { catalog, type Catalog } from './catalog'
 import { kcalTarget, type Goal, type Profile } from './calc'
 
 export interface PlanMeal { slot: Slot; id: string }
@@ -25,11 +26,11 @@ const shuffle = <T,>(a: T[], r: () => number) => {
 
 export const poolFor = (slot: Slot, diet: Diet) => MEALS.filter((m) => m.slot === slot && fitsDiet(m, diet))
 
-export const dayKcal = (meals: PlanMeal[]) => meals.reduce((s, m) => s + MEAL_BY_ID[m.id].kcal, 0)
+export const dayKcal = (meals: PlanMeal[], cat: Catalog) => meals.reduce((s, m) => s + cat.meal(m.id).kcal, 0)
 
 /** one portion factor per day so the day lands on target; steps of 0.05 */
-export const fitScale = (meals: PlanMeal[], target: number) =>
-  Math.min(2.2, Math.max(0.6, Math.round((target / dayKcal(meals)) * 20) / 20))
+export const fitScale = (meals: PlanMeal[], target: number, cat: Catalog) =>
+  Math.min(2.2, Math.max(0.6, Math.round((target / dayKcal(meals, cat)) * 20) / 20))
 
 const WORKOUT_PATTERN: Record<3 | 4 | 5, number[]> = { 3: [0, 2, 4], 4: [0, 1, 3, 5], 5: [0, 1, 2, 4, 5] }
 type Focus = 'cardio' | 'strength' | 'mixed'
@@ -45,6 +46,7 @@ const RECIPE: Record<Focus, [string, Partial<Record<MoveKind, number>>]> = {
 }
 
 export function generatePlan(p: Profile, startKey: string, seed = Date.now() % 1e9): Plan {
+  const builtIn = catalog({}) // new Plans use Built-in items only
   const r = rng(seed)
   const target = kcalTarget(p)
   const snacks = target > 3200 ? 3 : target > 2400 ? 2 : 1
@@ -67,13 +69,13 @@ export function generatePlan(p: Profile, startKey: string, seed = Date.now() % 1
     } else {
       workout = { title: 'Rest & Recharge', rest: true, moves: ['brisk-walk', take('cooldown')] }
     }
-    return { meals, scale: fitScale(meals, target), workout }
+    return { meals, scale: fitScale(meals, target, builtIn), workout }
   })
   return { startKey, target, seed, days }
 }
 
 /** replace one meal with the next one in its pool that is not already on that day */
-export function swapMeal(plan: Plan, dayIdx: number, mealIdx: number, diet: Diet): Plan {
+export function swapMeal(plan: Plan, dayIdx: number, mealIdx: number, diet: Diet, cat: Catalog): Plan {
   const day = plan.days[dayIdx]
   const cur = day.meals[mealIdx]
   const pool = poolFor(cur.slot, diet)
@@ -82,8 +84,7 @@ export function swapMeal(plan: Plan, dayIdx: number, mealIdx: number, diet: Diet
   const next = Array.from({ length: pool.length }, (_, i) => pool[(start + 1 + i) % pool.length]).find((m) => !used.has(m.id))
   if (!next) return plan
   const meals = day.meals.map((m, i) => (i === mealIdx ? { ...m, id: next.id } : m))
-  const days = plan.days.map((d, i) => (i === dayIdx ? { ...d, meals, scale: fitScale(meals, plan.target) } : d))
+  const days = plan.days.map((d, i) => (i === dayIdx ? { ...d, meals, scale: fitScale(meals, plan.target, cat) } : d))
   return { ...plan, days }
 }
 
-export const moveMinutes = (id: string, level: 0 | 1) => MOVE_BY_ID[id].minutes[level]

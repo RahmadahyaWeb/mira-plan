@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { bmr, kcalTarget, type Profile } from './calc'
 import { addDays, dateKey, planDayIndex } from './date'
 import { dayKcal, generatePlan, swapMeal } from './plan'
+import { catalog } from './catalog'
 import { itemIds, streak, type Log } from './track'
 import { MEAL_BY_ID, fitsDiet } from '../data/meals'
 
@@ -36,7 +37,7 @@ describe('plan', () => {
         it(`hits target within 5% (${goal}, ${diet}, ${p.sex})`, () => {
           const plan = generatePlan({ ...p, goal, diet }, '2026-11-13', 42)
           for (const d of plan.days) {
-            expect(Math.abs(dayKcal(d.meals) * d.scale - plan.target) / plan.target).toBeLessThan(0.05)
+            expect(Math.abs(dayKcal(d.meals, catalog({})) * d.scale - plan.target) / plan.target).toBeLessThan(0.05)
             for (const m of d.meals) expect(fitsDiet(MEAL_BY_ID[m.id], diet)).toBe(true)
           }
           expect(plan.days.filter((d) => !d.workout.rest)).toHaveLength(p.workoutDays)
@@ -44,7 +45,7 @@ describe('plan', () => {
 
   it('swap keeps slot and diet, avoids duplicates', () => {
     const plan = generatePlan({ ...base, diet: 'vegan' }, '2026-11-13', 7)
-    const next = swapMeal(plan, 0, 0, 'vegan')
+    const next = swapMeal(plan, 0, 0, 'vegan', catalog({}))
     const a = plan.days[0].meals[0], b = next.days[0].meals[0]
     expect(b.id).not.toBe(a.id)
     expect(MEAL_BY_ID[b.id].slot).toBe(a.slot)

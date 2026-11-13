@@ -9,8 +9,8 @@ import { useStore } from '../store'
 import { addDays, dateKey, prettyDay } from '../lib/date'
 import { streak } from '../lib/track'
 import { WATER_GOAL, drink, planDay, swap, tick } from '../lib/planDay'
-import { MEAL_BY_ID, type Slot } from '../data/meals'
-import { MOVE_BY_ID } from '../data/exercises'
+import { type Slot } from '../data/meals'
+import { catalog } from '../lib/catalog'
 import NoPlan from '../components/NoPlan'
 
 const ROW: Record<Slot, string> = { breakfast: 'bg-butter/25', lunch: 'bg-sky/20', snack: 'bg-lilac/25', dinner: 'bg-pink/20' }
@@ -41,6 +41,7 @@ export default function Today() {
   const key = params.key ?? today
   const { plan, profile, log } = state
   if (!plan || !profile) return <NoPlan />
+  const cat = catalog(state)
 
   const { day, index: dayIdx, done, progress: prog, water, eaten, burned, macros } = planDay({ plan, profile, log }, key)
   const st = streak(plan, log, today)
@@ -84,7 +85,7 @@ export default function Today() {
             </div>
             <ul className="mt-4 space-y-3">
               {day.meals.map((pm, i) => {
-                const m = MEAL_BY_ID[pm.id]
+                const m = cat.meal(pm.id)
                 const id = `meal-${i}`
                 const on = done.has(id)
                 return (
@@ -112,11 +113,11 @@ export default function Today() {
           <section className="card p-3 sm:p-6" aria-labelledby="move-h">
             <div className="flex flex-wrap items-baseline justify-between gap-3">
               <h2 id="move-h" className="px-2 pt-1 text-2xl font-bold sm:p-0 sm:text-3xl">{day.workout.title}</h2>
-              <span className="chip bg-sky">{day.workout.moves.reduce((s, id) => s + MOVE_BY_ID[id].minutes[profile.level], 0)} min{day.workout.rest ? ' · easy day' : ''}</span>
+              <span className="chip bg-sky">{day.workout.moves.reduce((s, id) => s + cat.move(id).minutes[profile.level], 0)} min{day.workout.rest ? ' · easy day' : ''}</span>
             </div>
             <ul className="mt-4 space-y-3">
               {day.workout.moves.map((mid, i) => {
-                const mv = MOVE_BY_ID[mid]
+                const mv = cat.move(mid)
                 const id = `move-${i}`
                 const on = done.has(id)
                 return (

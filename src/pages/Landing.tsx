@@ -8,13 +8,14 @@ import { Plate, Swoosh, SLOT_COLOR, DISH, SLOT_LABEL, KIND_COLOR, fmt } from '..
 import { Check, Flame } from '../components/Icons'
 import { useAuth } from '../auth'
 import { generatePlan } from '../lib/plan'
-import { MEALS, MEAL_BY_ID } from '../data/meals'
-import { MOVE_BY_ID } from '../data/exercises'
+import { MEALS } from '../data/meals'
+import { catalog } from '../lib/catalog'
 import { moveKcal, type Profile } from '../lib/calc'
 
 const demo: Profile = { name: 'Sam', sex: 'female', age: 29, heightCm: 166, weightKg: 68, activity: 'light', goal: 'lose', diet: 'vegetarian', level: 0, workoutDays: 4 }
 const sample = generatePlan(demo, '2026-01-05', 11)
 const sampleDay = sample.days[0]
+const cat = catalog({})
 const BAND = MEALS.filter((_, i) => i % 4 === 1).slice(0, 14)
 
 function Blob({ className }: { className: string }) {
@@ -148,7 +149,7 @@ export default function Landing() {
               <h3 className="text-2xl font-semibold">Menu</h3>
               <ul className="mt-4 divide-y-2 divide-dashed divide-ink/15">
                 {sampleDay.meals.map((pm) => {
-                  const m = MEAL_BY_ID[pm.id]
+                  const m = cat.meal(pm.id)
                   return (
                     <li key={pm.id} className="flex items-center gap-4 py-3">
                       <Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={52} />
@@ -166,7 +167,7 @@ export default function Landing() {
               <h3 className="text-2xl font-semibold">{sampleDay.workout.title}</h3>
               <ul className="mt-4 divide-y-2 divide-dashed divide-ink/15">
                 {sampleDay.workout.moves.map((id, i) => {
-                  const mv = MOVE_BY_ID[id]
+                  const mv = cat.move(id)
                   return (
                     <li key={i} className="flex items-center gap-4 py-3">
                       <Plate art={<MoveArt id={mv.id} />} color={KIND_COLOR[mv.kind]} size={44} />
