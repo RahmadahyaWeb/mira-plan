@@ -1,4 +1,4 @@
--- Run in the Supabase SQL Editor (after accounts.sql). One row per Account per day: ticked items and water.
+`-- Run in the Supabase SQL Editor (after accounts.sql). One row per Account per day: ticked items and water.
 
 create table public.logs (
   account_id uuid not null references public.accounts (id) on delete cascade,
@@ -15,3 +15,4 @@ create policy "own log update" on public.logs for update to authenticated
   using (account_id = auth.uid()) with check (account_id = auth.uid());
 create policy "own log delete" on public.logs for delete to authenticated using (account_id = auth.uid());
 -- No anon access.
+`
