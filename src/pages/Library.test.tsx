@@ -49,4 +49,32 @@ describe('Library Moves tab', () => {
     expect(el.textContent).toContain('Saved “Salsa” to your Moves.')
     expect(el.textContent).toContain('Custom')
   })
+
+  it('edits a Custom Move from a prefilled form, and deletes it only after confirm; Built-in Moves have neither', async () => {
+    const btn = (label: string) => el.querySelector<HTMLButtonElement>(`button[aria-label="${label}"]`)
+    expect(btn('Edit Jumping Jacks')).toBeNull()
+    expect(btn('Delete Jumping Jacks')).toBeNull()
+
+    await click(btn('Edit Salsa')!)
+    expect(el.textContent).toContain('Edit Move')
+    expect(q<HTMLInputElement>('#move-name').value).toBe('Salsa')
+    expect(q<HTMLInputElement>('#move-minutes').value).toBe('20')
+    expect(q<HTMLSelectElement>('#move-intensity').value).toBe('moderate')
+    await type('move-minutes', '0')
+    await submit()
+    expect(state.custom.moves[0].minutes).toEqual([20, 20])
+    await type('move-name', 'Salsa Night')
+    await type('move-minutes', '30')
+    await submit()
+    expect(state.custom.moves).toHaveLength(1)
+    expect(state.custom.moves[0]).toMatchObject({ name: 'Salsa Night', minutes: [30, 30], dose: ['30 min', '30 min'] })
+
+    const answers = [false, true]
+    window.confirm = () => answers.shift()!
+    await click(btn('Delete Salsa Night')!)
+    expect(state.custom.moves).toHaveLength(1)
+    await click(btn('Delete Salsa Night')!)
+    expect(state.custom.moves).toEqual([])
+    expect(el.textContent).toContain('Deleted “Salsa Night”.')
+  })
 })

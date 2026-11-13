@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { empty, noCustom, type State } from './accountData'
 import type { Profile } from './calc'
 import { addDays } from './date'
-import { generatePlan } from './plan'
-import { addCustomMeal, addCustomMove, drink, mealOnToday, planDay, planWeek, startPlan, swap, tick } from './planDay'
+import { fitScale, generatePlan } from './plan'
+import { addCustomMeal, addCustomMove, deleteCustomMeal, deleteCustomMove, drink, editCustomMeal, mealOnToday, planDay, planWeek, startPlan, swap, tick } from './planDay'
 import { catalog, isCustom } from './catalog'
 import { itemIds } from './track'
-import { MEAL_BY_ID } from '../data/meals'
+import { MEAL_BY_ID, fitsDiet } from '../data/meals'
 import { moveKcal } from './calc'
 
 const profile: Profile = { name: '', sex: 'female', age: 30, heightCm: 165, weightKg: 65, activity: 'light', goal: 'lose', diet: 'anything', level: 0, workoutDays: 3 }
@@ -135,5 +135,58 @@ describe('Custom Moves', () => {
     const withIt: State = { ...s, plan: { ...plan, days: plan.days.map((d, i) => (i === day ? { ...d, workout: { ...d.workout, moves: [id, ...d.workout.moves.slice(1)] } } : d)) } }
     expect(catalog(withIt).move(id).name).toBe('Salsa')
     expect(planDay(ready(tick(key, 'move-0')(withIt)), key).burned).toBeCloseTo(moveKcal(8, profile.weightKg, 20))
+  })
+})
+
+describe('editing and deleting Custom items', () => {
+  const nasi = { name: 'Nasi Uduk', slot: 'breakfast' as const, emoji: '🍚', kcal: 450, protein: 10, carbs: 70, fat: 14, diet: 'vegan' as const, minutes: 0, ingredients: [], steps: [] }
+  // put Custom Meal `id` as the breakfast of Plan day 0 and 2
+  const onDays = (s: State, id: string): State => ({ ...s, plan: { ...s.plan!, days: s.plan!.days.map((d, i) => (i === 0 || i === 2 ? { ...d, meals: d.meals.map((m, j) => (j === 0 ? { ...m, id } : m)) } : d)) } })
+
+  it('editing a Custom Meal changes it and recalculates the portion of every Plan day using it', () => {
+    const added = addCustomMeal(nasi)(fresh)
+    const id = added.custom.meals[0].id
+    const s = onDays(added, id)
+    const next = editCustomMeal(id, { ...nasi, name: 'Nasi Uduk Besar', kcal: 1200 })(s)
+    expect(next.custom.meals).toEqual([{ ...nasi, name: 'Nasi Uduk Besar', kcal: 1200, id }])
+    expect(next.plan!.days[0].scale).toBeLessThan(s.plan!.days[0].scale)
+    expect(next.plan!.days[2].scale).toBeLessThan(s.plan!.days[2].scale)
+    expect(next.plan!.days[1]).toBe(s.plan!.days[1])
+  })
+
+  it('deleting a Custom Meal swaps in a Built-in Meal of the same slot and diet, not already on that day, and recalculates the portion', () => {
+    const vegan = { ...profile, diet: 'vegan' as const }
+    const base: State = { profile: vegan, plan: generatePlan(vegan, start, 7), log: {}, custom: noCustom }
+    const added = addCustomMeal(nasi)(base)
+    const id = added.custom.meals[0].id
+    const s = onDays(added, id)
+    const next = deleteCustomMeal(id)(s)
+    expect(next.custom.meals).toEqual([])
+    for (const d of [0, 2]) {
+      const day = next.plan!.days[d]
+      const m = MEAL_BY_ID[day.meals[0].id]
+      expect(m.slot).toBe('breakfast')
+      expect(fitsDiet(m, 'vegan')).toBe(true)
+      expect(day.meals.slice(1).map((x) => x.id)).not.toContain(m.id)
+      expect(day.scale).toBe(fitScale(day.meals, base.plan!.target, catalog({})))
+    }
+    expect(next.plan!.days[1]).toBe(s.plan!.days[1])
+  })
+
+  it('deleting a Custom Move drops it from every workout, and ticks stay on the right items', () => {
+    const salsa = { name: 'Salsa', kind: 'cardio' as const, intensity: 'hard' as const, minutes: 20, emoji: '', dose: '', how: '' }
+    const added = addCustomMove(salsa)(fresh)
+    const id = added.custom.moves[0].id
+    const day = plan.days.findIndex((d) => d.workout.moves.length > 2)
+    const withIt: State = { ...added, plan: { ...plan, days: plan.days.map((d, i) => (i === day ? { ...d, workout: { ...d.workout, moves: [d.workout.moves[0], id, ...d.workout.moves.slice(1)] } } : d)) } }
+    const key = addDays(start, day)
+    const later = addDays(key, 7)
+    const ticked = [tick(key, 'move-0'), tick(key, 'move-1'), tick(key, 'move-2'), tick(key, 'meal-1'), tick(later, 'move-2')].reduce((acc, f) => f(acc), withIt)
+    const next = deleteCustomMove(id)(ticked)
+    expect(next.custom.moves).toEqual([])
+    expect(next.plan!.days[day].workout.moves).toEqual(plan.days[day].workout.moves)
+    expect(next.plan!.days.flatMap((d) => d.workout.moves)).not.toContain(id)
+    expect(next.log[key].done.sort()).toEqual(['meal-1', 'move-0', 'move-1'])
+    expect(next.log[later].done).toEqual(['move-1'])
   })
 })

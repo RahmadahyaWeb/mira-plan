@@ -1,7 +1,7 @@
 import type { Custom, State } from './accountData'
 import { macroTargets, moveKcal, type Profile } from './calc'
 import { addDays, daysBetween, planDayIndex } from './date'
-import { swapMeal, type Plan, type PlanDay } from './plan'
+import { fitScale, swapMeal, type Plan, type PlanDay } from './plan'
 import { dayFor, progress, type Log } from './track'
 import { catalog, newCustomId } from './catalog'
 import type { Meal } from '../data/meals'
@@ -90,15 +90,62 @@ export const addCustomMeal = (meal: Omit<Meal, 'id'>): Update => (s) => ({
   custom: { ...s.custom, meals: [...s.custom.meals, { ...meal, id: newCustomId() }] },
 })
 
+/** Change a Custom Meal; every Plan day that uses it gets its portion recalculated. */
+export const editCustomMeal = (id: string, meal: Omit<Meal, 'id'>): Update => (s) => {
+  const next = { ...s, custom: { ...s.custom, meals: s.custom.meals.map((m) => (m.id === id ? { ...meal, id } : m)) } }
+  if (!next.plan) return next
+  const cat = catalog(next)
+  const target = next.plan.target
+  const days = next.plan.days.map((d) => (d.meals.some((m) => m.id === id) ? { ...d, scale: fitScale(d.meals, target, cat) } : d))
+  return { ...next, plan: { ...next.plan, days } }
+}
+
+/** Delete a Custom Meal; each Plan day slot holding it gets the next Built-in Meal that fits, and a new portion. */
+export const deleteCustomMeal = (id: string): Update => (s) => {
+  const next = { ...s, custom: { ...s.custom, meals: s.custom.meals.filter((m) => m.id !== id) } }
+  if (!next.plan || !next.profile) return next
+  const cat = catalog(next)
+  let plan = next.plan
+  // shortcut: if a slot has no Built-in Meal left that fits, swapMeal keeps the old id; every slot and diet has several today
+  plan.days.forEach((d, di) => d.meals.forEach((m, mi) => { if (m.id === id) plan = swapMeal(plan, di, mi, next.profile!.diet, cat) }))
+  return { ...next, plan }
+}
+
 export type Intensity = 'light' | 'moderate' | 'hard'
 export const INTENSITY_MET: Record<Intensity, number> = { light: 3, moderate: 5, hard: 8 }
 export interface CustomMoveInput { name: string; kind: MoveKind; intensity: Intensity; minutes: number; emoji: string; dose: string; how: string }
 
-/** Add a Custom Move: intensity picks the MET; both levels share one minutes and dose. */
-export const addCustomMove = ({ intensity, minutes, dose, emoji, ...rest }: CustomMoveInput): Update => (s) => {
+/** Intensity picks the MET; both levels share one minutes and dose. */
+function toMove(id: string, { intensity, minutes, dose, emoji, ...rest }: CustomMoveInput): Move {
   const d = dose || `${minutes} min` // Today shows a dose line, so never leave it blank
-  const move: Move = { ...rest, id: newCustomId(), emoji: emoji || '💪', met: INTENSITY_MET[intensity], minutes: [minutes, minutes], dose: [d, d] }
-  return { ...s, custom: { ...s.custom, moves: [...s.custom.moves, move] } }
+  return { ...rest, id, emoji: emoji || '💪', met: INTENSITY_MET[intensity], minutes: [minutes, minutes], dose: [d, d] }
+}
+
+export const addCustomMove = (input: CustomMoveInput): Update => (s) =>
+  ({ ...s, custom: { ...s.custom, moves: [...s.custom.moves, toMove(newCustomId(), input)] } })
+
+/** Change a Custom Move; workouts hold its id, so they show the new version. */
+export const editCustomMove = (id: string, input: CustomMoveInput): Update => (s) =>
+  ({ ...s, custom: { ...s.custom, moves: s.custom.moves.map((m) => (m.id === id ? toMove(id, input) : m)) } })
+
+/** Delete a Custom Move: it leaves every workout, and ticks (`move-<index>`) shift so they stay on the same items. */
+export const deleteCustomMove = (id: string): Update => (s) => {
+  const next = { ...s, custom: { ...s.custom, moves: s.custom.moves.filter((m) => m.id !== id) } }
+  if (!next.plan) return next
+  const old = next.plan
+  // per Plan day: old move index -> new tick id, or null when that move is gone
+  const remap = old.days.map((d) => {
+    let n = 0
+    return d.workout.moves.map((m) => (m === id ? null : `move-${n++}`))
+  })
+  const log = Object.fromEntries(Object.entries(next.log).map(([k, dl]) => {
+    if (daysBetween(old.startKey, k) < 0) return [k, dl] // before this Plan: ticks belong to an older one
+    const map = remap[planDayIndex(old.startKey, k)]
+    const done = dl.done.flatMap((t) => (t.startsWith('move-') ? (map[Number(t.slice(5))] ?? []) : [t]))
+    return [k, { ...dl, done }]
+  }))
+  const days = old.days.map((d) => (d.workout.moves.includes(id) ? { ...d, workout: { ...d.workout, moves: d.workout.moves.filter((m) => m !== id) } } : d))
+  return { ...next, log, plan: { ...old, days } }
 }
 
 /** A new Plan: ticks from today on belonged to the old Plan's items, so they go. */
