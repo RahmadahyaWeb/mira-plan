@@ -15,7 +15,7 @@ interface Auth {
 const toAccount = (u: User | undefined): Account | null =>
   u ? { id: u.id, username: String(u.user_metadata?.username ?? '') } : null
 
-const Ctx = createContext<Auth | null>(null)
+export const Ctx = createContext<Auth | null>(null)
 
 /** Actions resolve to an error message, or null on success. */
 export function AuthProvider({ children }: { children: ReactNode }) {
