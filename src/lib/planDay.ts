@@ -3,8 +3,7 @@ import { macroTargets, moveKcal, type Profile } from './calc'
 import { addDays, daysBetween, planDayIndex } from './date'
 import { swapMeal, type Plan, type PlanDay } from './plan'
 import { dayFor, progress, type Log } from './track'
-import { MEAL_BY_ID } from '../data/meals'
-import { MOVE_BY_ID } from '../data/exercises'
+import { catalog } from './catalog'
 
 /** Account data once it has a Profile and a Plan. */
 export interface Ready { plan: Plan; profile: Profile; log: Log }
@@ -12,15 +11,20 @@ export interface Ready { plan: Plan; profile: Profile; log: Log }
 export const WATER_GOAL = 8
 
 /** Everything a page shows for one calendar date: its Plan day, what is ticked, and the sums. */
-export function planDay({ plan, profile, log }: Ready, key: string) {
+export function planDay(s: Ready, key: string) {
+  const { plan, profile, log } = s
+  const cat = catalog(s)
   const day = dayFor(plan, key)
   const done = new Set(log[key]?.done ?? [])
   const eaten = day.meals.reduce((acc, pm, i) => {
     if (!done.has(`meal-${i}`)) return acc
-    const m = MEAL_BY_ID[pm.id]
+    const m = cat.meal(pm.id)
     return { kcal: acc.kcal + m.kcal * day.scale, protein: acc.protein + m.protein * day.scale, carbs: acc.carbs + m.carbs * day.scale, fat: acc.fat + m.fat * day.scale }
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 })
-  const burned = day.workout.moves.reduce((s, id, i) => (done.has(`move-${i}`) ? s + moveKcal(MOVE_BY_ID[id].met, profile.weightKg, MOVE_BY_ID[id].minutes[profile.level]) : s), 0)
+  const burned = day.workout.moves.reduce((sum, id, i) => {
+    const mv = cat.move(id)
+    return done.has(`move-${i}`) ? sum + moveKcal(mv.met, profile.weightKg, mv.minutes[profile.level]) : sum
+  }, 0)
   return {
     key,
     day,
@@ -76,7 +80,7 @@ export const drink = (key: string, i: number): Update => (s) => {
 }
 
 export const swap = (dayIdx: number, mealIdx: number): Update => (s) =>
-  s.plan && s.profile ? { ...s, plan: swapMeal(s.plan, dayIdx, mealIdx, s.profile.diet) } : s
+  s.plan && s.profile ? { ...s, plan: swapMeal(s.plan, dayIdx, mealIdx, s.profile.diet, catalog(s)) } : s
 
 /** A new Plan: ticks from today on belonged to the old Plan's items, so they go. */
 export const startPlan = (profile: Profile, plan: Plan, today: string): Update => (s) => ({

@@ -4,7 +4,8 @@ import Mascot from '../components/Mascot'
 import FoodArt from '../components/FoodArt'
 import { Plate, SLOT_COLOR, DISH, SLOT_LABEL, fmt } from '../components/Bits'
 import { ArrowLeft, Check, Clock } from '../components/Icons'
-import { MEALS, MEAL_BY_ID, fitsDiet } from '../data/meals'
+import { MEALS, fitsDiet, type Meal } from '../data/meals'
+import { catalog } from '../lib/catalog'
 import { useStore } from '../store'
 import { dateKey } from '../lib/date'
 import { mealOnToday, tick } from '../lib/planDay'
@@ -17,7 +18,7 @@ export default function MealPage() {
   const nav = useNavigate()
   const { state, set } = useStore()
   const [got, setGot] = useState<Set<number>>(new Set())
-  const m = MEAL_BY_ID[id]
+  const m: Meal | undefined = catalog(state).meal(id)
   if (!m) return <div className="wrap py-20 text-center"><h1 className="text-4xl font-bold">Meal not found</h1><Link to="/" className="btn mt-6">Home</Link></div>
 
   // when this meal is on today's plan: show today's portion and let it be ticked from here

@@ -16,4 +16,14 @@
 
 **Log**: The record of which Plan items an Account has ticked off, and water drunk, per day.
 
-**Account data**: The Profile, Plan and Log saved for one Account. It follows the Account across devices.
+**Account data**: The Profile, Plan, Log, and Custom Meals and Moves saved for one Account. It follows the Account across devices.
+
+**Meal**: One food menu item (name, meal slot, calories, macros, diet). Either Built-in or Custom.
+
+**Move**: One exercise (name, kind, intensity, minutes). Either Built-in or Custom. "Exercise" and "latihan" mean Move.
+
+**Built-in**: A Meal or Move that ships with Mira. Every Account sees the same ones. Nobody can edit, hide, or delete them.
+
+**Custom**: A Meal or Move an Account made itself. Only that Account sees it. The Account can edit or delete it any time. Part of Account data.
+
+**Library**: The place where an Account sees every Meal and Move it can use: all Built-in ones plus its own Custom ones. Custom ones are added, edited and deleted here.
