@@ -5,6 +5,7 @@ import { swapMeal, type Plan, type PlanDay } from './plan'
 import { dayFor, progress, type Log } from './track'
 import { catalog, newCustomId } from './catalog'
 import type { Meal } from '../data/meals'
+import type { Move, MoveKind } from '../data/exercises'
 
 /** Account data once it has a Profile and a Plan. */
 export interface Ready { plan: Plan; profile: Profile; log: Log; custom: Custom }
@@ -88,6 +89,17 @@ export const addCustomMeal = (meal: Omit<Meal, 'id'>): Update => (s) => ({
   ...s,
   custom: { ...s.custom, meals: [...s.custom.meals, { ...meal, id: newCustomId() }] },
 })
+
+export type Intensity = 'light' | 'moderate' | 'hard'
+export const INTENSITY_MET: Record<Intensity, number> = { light: 3, moderate: 5, hard: 8 }
+export interface CustomMoveInput { name: string; kind: MoveKind; intensity: Intensity; minutes: number; emoji: string; dose: string; how: string }
+
+/** Add a Custom Move: intensity picks the MET; both levels share one minutes and dose. */
+export const addCustomMove = ({ intensity, minutes, dose, emoji, ...rest }: CustomMoveInput): Update => (s) => {
+  const d = dose || `${minutes} min` // Today shows a dose line, so never leave it blank
+  const move: Move = { ...rest, id: newCustomId(), emoji: emoji || '💪', met: INTENSITY_MET[intensity], minutes: [minutes, minutes], dose: [d, d] }
+  return { ...s, custom: { ...s.custom, moves: [...s.custom.moves, move] } }
+}
 
 /** A new Plan: ticks from today on belonged to the old Plan's items, so they go. */
 export const startPlan = (profile: Profile, plan: Plan, today: string): Update => (s) => ({

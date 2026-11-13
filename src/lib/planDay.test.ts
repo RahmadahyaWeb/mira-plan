@@ -3,10 +3,11 @@ import { empty, noCustom, type State } from './accountData'
 import type { Profile } from './calc'
 import { addDays } from './date'
 import { generatePlan } from './plan'
-import { addCustomMeal, drink, mealOnToday, planDay, planWeek, startPlan, swap, tick } from './planDay'
+import { addCustomMeal, addCustomMove, drink, mealOnToday, planDay, planWeek, startPlan, swap, tick } from './planDay'
 import { catalog, isCustom } from './catalog'
 import { itemIds } from './track'
 import { MEAL_BY_ID } from '../data/meals'
+import { moveKcal } from './calc'
 
 const profile: Profile = { name: '', sex: 'female', age: 30, heightCm: 165, weightKg: 65, activity: 'light', goal: 'lose', diet: 'anything', level: 0, workoutDays: 3 }
 const start = '2026-01-01'
@@ -113,5 +114,26 @@ describe('Custom Meals', () => {
     const s = addCustomMeal(nasi)(fresh)
     const next = startPlan(profile, generatePlan(profile, '2026-01-05', 7), '2026-01-05')(s)
     expect(next.custom).toBe(s.custom)
+  })
+})
+
+describe('Custom Moves', () => {
+  const salsa = { name: 'Salsa', kind: 'cardio' as const, intensity: 'hard' as const, minutes: 20, emoji: '', dose: '', how: '' }
+  it('maps intensity to MET 3 / 5 / 8 and uses one minutes and dose for both levels', () => {
+    const mets = (['light', 'moderate', 'hard'] as const).map((intensity) => addCustomMove({ ...salsa, intensity })(fresh).custom.moves[0].met)
+    expect(mets).toEqual([3, 5, 8])
+    const m = addCustomMove({ ...salsa, dose: '2 songs' })(fresh).custom.moves[0]
+    expect(m.minutes).toEqual([20, 20])
+    expect(m.dose).toEqual(['2 songs', '2 songs'])
+    expect(isCustom(m.id)).toBe(true)
+  })
+  it('a Custom Move on a Plan day burns kcal with the mapped MET', () => {
+    const s = addCustomMove(salsa)(fresh)
+    const id = s.custom.moves[0].id
+    const day = plan.days.findIndex((d) => d.workout.moves.length)
+    const key = addDays(start, day)
+    const withIt: State = { ...s, plan: { ...plan, days: plan.days.map((d, i) => (i === day ? { ...d, workout: { ...d.workout, moves: [id, ...d.workout.moves.slice(1)] } } : d)) } }
+    expect(catalog(withIt).move(id).name).toBe('Salsa')
+    expect(planDay(ready(tick(key, 'move-0')(withIt)), key).burned).toBeCloseTo(moveKcal(8, profile.weightKg, 20))
   })
 })
