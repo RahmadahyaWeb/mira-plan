@@ -1,29 +1,62 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import type { Profile } from './lib/calc'
 import type { Plan } from './lib/plan'
 import type { Log } from './lib/track'
+import { supabase } from './lib/supabase'
+import { useAuth } from './auth'
 
 interface State { profile: Profile | null; plan: Plan | null; log: Log }
-const KEY = 'mira-planner-v1'
+const OLD_KEY = 'mira-planner-v1'
 const empty: State = { profile: null, plan: null, log: {} }
 
-function load(): State {
-  try {
-    const raw = localStorage.getItem(KEY)
-    return raw ? { ...empty, ...JSON.parse(raw) } : empty
-  } catch {
-    return empty
-  }
-}
-
-const Ctx = createContext<{ state: State; set: (fn: (s: State) => State) => void } | null>(null)
+interface Store { state: State; set: (fn: (s: State) => State) => void; loading: boolean; error: string | null }
+export const Ctx = createContext<Store | null>(null)
 
 export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, setState] = useState(load)
+  const { account } = useAuth()
+  const id = account?.id
+  const [state, setState] = useState(empty)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const ref = useRef(empty)
+  const queue = useRef(Promise.resolve())
+
   useEffect(() => {
-    try { localStorage.setItem(KEY, JSON.stringify(state)) } catch { /* private mode: keep in memory */ }
-  }, [state])
-  return <Ctx.Provider value={{ state, set: setState }}>{children}</Ctx.Provider>
+    // Old device-only data is dropped, never imported.
+    try { localStorage.removeItem(OLD_KEY) } catch { /* storage blocked */ }
+  }, [])
+
+  useEffect(() => {
+    let stale = false
+    ref.current = empty
+    setState(empty)
+    setError(null)
+    if (!id) { setLoading(false); return }
+    setLoading(true)
+    supabase.from('plans').select('profile, plan').eq('account_id', id).maybeSingle().then(({ data, error: e }) => {
+      if (stale) return
+      if (e) setError('Could not load your plan. Check your connection and reload.')
+      else ref.current = { ...empty, profile: data?.profile ?? null, plan: data?.plan ?? null }
+      setState(ref.current)
+      setLoading(false)
+    })
+    return () => { stale = true }
+  }, [id])
+
+  const set: Store['set'] = (fn) => {
+    const prev = ref.current
+    const next = fn(prev)
+    ref.current = next
+    setState(next)
+    if (!id || (prev.profile === next.profile && prev.plan === next.plan)) return
+    // Saves run one at a time so the last change wins; a failure keeps the banner until a later save works.
+    queue.current = queue.current.then(async () => {
+      const { error: e } = await supabase.from('plans').upsert({ account_id: id, profile: next.profile, plan: next.plan, updated_at: new Date().toISOString() })
+      setError(e ? 'Could not save your changes. They are kept on this screen; we will retry on your next change.' : null)
+    })
+  }
+
+  return <Ctx.Provider value={{ state, set, loading, error }}>{children}</Ctx.Provider>
 }
 
 export function useStore() {

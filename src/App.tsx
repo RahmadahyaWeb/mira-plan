@@ -9,14 +9,17 @@ import MealPage from './pages/MealPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import { PublicOnly, RequireAccount } from './guards'
+import { useStore } from './store'
 import ArtSheet from './pages/ArtSheet'
 
 export default function App() {
   const { pathname } = useLocation()
+  const { error } = useStore()
   useEffect(() => { window.scrollTo(0, 0) }, [pathname])
   return (
     <div className="min-h-svh overflow-x-clip pb-24 md:pb-0">
       <Nav />
+      {error && <p role="alert" className="bg-red-100 px-4 py-2 text-center font-bold text-red-900">{error}</p>}
       <main id="main">
         <Routes>
           <Route path="/" element={<Landing />} />

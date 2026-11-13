@@ -1,5 +1,6 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from './auth'
+import { useStore } from './store'
 
 /** Where a Visitor was headed before login; falls back to the plan. */
 export function useAfterLogin(): string {
@@ -9,8 +10,9 @@ export function useAfterLogin(): string {
 
 export function RequireAccount() {
   const { account, loading } = useAuth()
+  const store = useStore()
   const { pathname, search } = useLocation()
-  if (loading) return null
+  if (loading || (account && store.loading)) return null
   return account ? <Outlet /> : <Navigate to="/login" replace state={{ from: pathname + search }} />
 }
 
