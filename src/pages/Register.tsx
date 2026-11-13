@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { supabase } from '../lib/supabase'
 import { normalizeUsername, validateUsername } from '../lib/username'
@@ -9,6 +9,7 @@ const label = 'mb-1.5 block font-display text-lg font-semibold'
 
 export default function Register() {
   const { signUp } = useAuth()
+  const { state } = useLocation()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -75,7 +76,7 @@ export default function Register() {
         </div>
         <p role="alert" className="text-base font-bold text-red-700">{formError}</p>
         <button type="submit" className="btn btn-pink" disabled={busy}>{busy ? 'Creating…' : 'Create account'}</button>
-        <p className="text-center text-base">Already have an account? <Link to="/login" className="font-bold underline">Log in</Link></p>
+        <p className="text-center text-base">Already have an account? <Link to="/login" state={state} className="font-bold underline">Log in</Link></p>
       </form>
     </div>
   )

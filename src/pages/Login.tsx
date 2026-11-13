@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
 
 const input = 'w-full rounded-2xl border-[2.5px] border-ink px-4 py-3 font-display text-xl font-semibold outline-none focus:shadow-pop'
@@ -7,6 +7,7 @@ const label = 'mb-1.5 block font-display text-lg font-semibold'
 
 export default function Login() {
   const { signIn } = useAuth()
+  const { state } = useLocation()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
@@ -43,7 +44,7 @@ export default function Login() {
         <button type="submit" className="btn btn-pink" disabled={busy}>{busy ? 'Logging in…' : 'Log in'}</button>
         {/* Inactive until password reset ships (docs/backlog.md). */}
         <span aria-disabled="true" className="text-center text-base text-ink/50">Forgot password?</span>
-        <p className="text-center text-base">New here? <Link to="/register" className="font-bold underline">Sign up</Link></p>
+        <p className="text-center text-base">New here? <Link to="/register" state={state} className="font-bold underline">Sign up</Link></p>
       </form>
     </div>
   )
