@@ -18,6 +18,7 @@ export default function DayEditor({ dayIdx, pick: initial, onClose }: { dayIdx: 
   const ref = useRef<HTMLDialogElement>(null)
   const [pick, setPick] = useState<Choosing>(initial)
   useEffect(() => { ref.current?.showModal() }, [])
+  useEffect(() => { ref.current?.scrollTo(0, 0) }, [pick]) // each view starts at its title and Back button
   const { plan, profile } = state
   if (!plan || !profile) return null
   const cat = catalog(state)
@@ -40,7 +41,7 @@ export default function DayEditor({ dayIdx, pick: initial, onClose }: { dayIdx: 
     list = cat.moves.map((mv) => (
       <li key={mv.id}><button type="button" onClick={() => { set(pick === 'add' ? addMove(dayIdx, mv.id, today) : replaceMove(dayIdx, pick.move, mv.id, today)); setPick(null) }} className={row}>
         <Plate art={<MoveArt id={mv.id} />} color={KIND_COLOR[mv.kind]} size={44} />
-        <span className="min-w-0 flex-1 leading-tight"><span className="block font-display text-lg font-semibold">{mv.name}</span><span className="text-sm font-bold capitalize text-ink-soft">{mv.kind} · {mv.dose[profile.level]}</span></span>
+        <span className="min-w-0 flex-1 leading-tight"><span className="block font-display text-lg font-semibold">{mv.name}</span><span className="text-sm font-bold text-ink-soft"><span className="capitalize">{mv.kind}</span> · {mv.dose[profile.level]}</span></span>
       </button></li>
     ))
   }
