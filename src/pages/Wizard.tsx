@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom'
 import Mascot from '../components/Mascot'
 import MoveArt from '../components/MoveArt'
 import FoodArt from '../components/FoodArt'
-import { Bubble, fmt } from '../components/Bits'
-import { ArrowLeft, ArrowRight, Check } from '../components/Icons'
+import { Bubble, DISH, Plate, fmt } from '../components/Bits'
+import { ArrowLeft, ArrowRight, Check, Flame } from '../components/Icons'
 import { kcalTarget, macroTargets, tdee, type Profile } from '../lib/calc'
 import { generatePlan } from '../lib/plan'
 import { dateKey } from '../lib/date'
@@ -157,8 +157,11 @@ export default function Wizard() {
     <div className="relative isolate">
     {/* pastel stage */}
     <div className="absolute inset-x-0 top-40 -z-10 h-[calc(100%-8rem)] border-y-[2.5px] border-ink bg-sky/35" aria-hidden="true">
-      <svg viewBox="0 0 200 200" className="absolute -left-24 top-10 hidden w-96 text-butter lg:block"><circle cx="100" cy="100" r="90" fill="currentColor" stroke="var(--color-ink)" strokeWidth="1.2" /></svg>
-      <svg viewBox="0 0 200 200" className="absolute -right-20 bottom-10 hidden w-80 text-pink lg:block"><rect x="20" y="20" width="160" height="160" rx="50" fill="currentColor" stroke="var(--color-ink)" strokeWidth="1.2" transform="rotate(14 100 100)" /></svg>
+      {/* themed props in the side gutters: a plate and a workout, what the plan will hold */}
+      <span className="absolute left-6 top-24 hidden -rotate-6 rounded-full shadow-pop xl:block"><Plate art={<FoodArt meal={{ name: 'Rainbow Berry Oats' }} dish={DISH.breakfast} />} color="bg-butter" size={160} /></span>
+      <span className="sticker absolute left-10 top-80 hidden rotate-[5deg] items-center gap-2 bg-pink text-lg xl:flex"><Flame className="size-5 text-pink-deep" />Daily streaks</span>
+      <span className="sticker absolute right-10 top-16 hidden rotate-[-5deg] bg-butter text-lg xl:block">7-day menu</span>
+      <span className="absolute bottom-24 right-6 hidden rotate-[8deg] rounded-full shadow-pop xl:block"><Plate art={<MoveArt id="rows" />} color="bg-sky" size={150} /></span>
     </div>
     <div className="wrap max-w-4xl pb-16 pt-4">
       {/* progress track with mascot riding along */}
@@ -170,8 +173,8 @@ export default function Wizard() {
       </div>
 
       <p className="-mt-4 mb-6 text-center font-display text-lg font-semibold">{last ? 'All done!' : `Step ${step + 1} of ${steps.length}`}</p>
-      <div className="relative z-10 grid items-end gap-4 md:-mb-16 md:grid-cols-[200px_1fr] md:pl-2">
-        <div className="hidden md:block"><Mascot size={220} hopKey={step} /></div>
+      <div className="relative z-10 grid items-end gap-4 md:-mb-16 md:grid-cols-[240px_1fr] md:pl-2">
+        <div className="hidden md:block"><Mascot size={260} hopKey={step} /></div>
         <Bubble side="left" className="hidden md:-ml-3 md:mb-28 md:block md:max-w-lg md:self-end md:!text-xl">{last ? <>Ta-da! Here&apos;s your sparkle number{p.name ? `, ${p.name}` : ''}.</> : steps[step].say}</Bubble>
         <Bubble side="bottom" className="md:hidden">{last ? <>Ta-da! Here&apos;s your sparkle number{p.name ? `, ${p.name}` : ''}.</> : steps[step].say}</Bubble>
       </div>

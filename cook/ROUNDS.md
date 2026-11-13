@@ -1,256 +1,232 @@
-# Cook ledger: Mira Planner
+# Cook ledger: Mira Planner, run 2
 
+Run 1 (rounds 01 to 07, shipped) is in `cook-archive/2026-11-13/`.
 
-Started: 2026-11-13 00:31 WITA
-Time: hard cap: round 07 (user, 2026-11-13 08:29) | no floor
-Bar: layout 9 | color 9 | type+components 9 | mascot 9 | motion 9 | detail 9 (out of 10); a11y >= 95 measured
+Started: 2026-11-13 11:22 WITA
+Time: floor none | cap round 04 (user: "Lanjut ronde 4"; was round 03)
+Bar: layout 9 | color 9 | type 9 | detail 9 | mascot 9 | playful 9 (out of 10); axe 0 violations
 Calibration offset: none yet
 Usage: 5h window, about 20% per hour, never 100%
-Gate: stills approved yes (round 07, 08:37) | final rendered (08:38), `cook/stills/rfinal/`
-Best so far: round 07, `cook/stills/r07/`
+Gate: stills approved no | final render not started
+Best so far: round 04, `cook/stills/r04/`, uncommitted
 
 ## Decisions
 
-Made without asking, one line each.
-- 00:40 Fonts self-hosted via @fontsource, because a playful rounded display face is core to the look and the brief allows npm packages.
-- 00:40 UI refs taken from Inspo archive (Buttondown, Slush) since user gave a style ("colorful and playful") not screens.
-- 00:40 English UI (user picked defaults for language).
-- 00:40 Mascot = user's unicorn.svg with its #FEFEFE background rect removed.
-- 01:13 User set a hard cap of 1 round (round 06), then stop and wait. Floor dropped for this run.
-- 08:29 User said "lanjut ronde 7 lalu stop": one more round, cap moved to round 07.
-- 08:37 User said "oke finalkan": round 07 stills approved, ship now.
+- 11:22 Skipped re-intake: target, refs and bar carry over from run 1; only the brief changed (Accounts + Supabase), because the user said "oke run baru" and the old brief answers the rest.
+- 11:22 Stills never sign in to the real Supabase project. scripts/stills.mjs stubs every *.supabase.co request in Playwright (fake session in localStorage, in-memory plans/logs), because the real project is remote and its credentials must not be used by the harness.
+- 11:23 Added shots S09 login, S10 register, S09m login mobile, S07m meal mobile (S07m was missing from run 1's final set).
+- 11:24 Round 01 focus = login/register, because they are new pages with no design pass (a bare card on white).
+- 12:36 User said only "Lanjut ronde 4" with no stop word. Read it as one more capped round (stop after round 04), because every earlier continue was one round and then stop.
 
 ## User feedback inbox
 
-Exact words. Close an item only when a still or clip proves it.
-- 00:35 "semua yang anda sebutkan dan ada jadwal olahraga harian serta menu harian. dibuat seperti checker/tracker" | open
-- 00:35 "colorful and playful style, dengan unicorn sebagai mascot" | open
-- 01:13 "lanjut, tapi CUKUP 1 RONDE SAJA (ronde 6), lalu berhenti" + focus: halaman resep, ruang kosong di atas pita menu landing, gelembung bicara wizard | handled in round 06, waiting on user
+- 11:20 "saya menambahkan fitur yang mempengaruhi halaman ui dari ronde 7" | round 01 | done: all pages re-rendered from the current code, login/register added to the shot list
+- 11:21 "oke run baru, tapi stop setelah ronde 1 baru selesai" | round 01 | done: stopped after round 01
+- 11:27 "lanjut ronde 2 dan stop" | round 02 | done: stopped after round 02
+- 11:31 "lanjut ronde 3, stop setelah ronde 3" | round 03 | done: stopped after round 03
+- 12:36 "Lanjut ronde 4" | round 04 | done: stopped after round 04 (see Decisions)
+- 12:47 "Stop di sini" | after round 04 | done: run paused at round 04, nothing committed
 
 ---
 
 ## Round 01
 
-Time: 00:31 to 00:45 WITA | total elapsed 0.25h
+Time: 11:22 to 11:30 WITA | total elapsed 0.1h
 Usage: not readable
-Focus: first build of every page + harness, because nothing existed.
+Focus: S09/S10 login and register, because they are new since run 1 and were the weakest (a bare card on a white page).
 
 Changes:
-- Vite + React + Tailwind v4 app at project root. Pages: landing, wizard (6 steps + result), Today tracker (meals, workouts, water, ring, streak, energy+macros), week, meal detail.
-- Data: 62 meals (src/data/meals.ts), 28 moves (src/data/exercises.ts). Logic in src/lib (Mifflin-St Jeor, plan generator with portion scale, swap, streak, local date keys).
-- Mascot: unicorn.svg minus background rect, svgo 355K -> 138K, served from public/, cropped with #svgView fragments.
-- Harness: scripts/shot.mjs + scripts/stills.mjs (drives wizard, ticks items, axe-core, h-scroll check). Fixed: harness counted ticks before render.
+- New `src/components/AuthStage.tsx`: a pastel stage band (pink on login, butter on register) with outlined sky circle and lilac blob, the mascot at 300px with a speech bubble on desktop, and a 110px mascot beside the bubble on phone.
+- `src/pages/Login.tsx`, `src/pages/Register.tsx`: wrapped in AuthStage, card fills its column, h1 text-5xl from sm.
+- `scripts/stills.mjs`: Supabase stub, login/register/meal-mobile shots, reloads after the session changes.
+- App pages (S01 to S07) unchanged in this round. Versus run-1 round 07 they differ only in the nav (username + Log out) and in date-based meal picks (`cook/compare/r01/r07-vs-r01.jpg`).
 
-Stills: `cook/stills/r01/` | Side by side: `cook/compare/r01/`
+Stills: `cook/stills/r01/` | Side by side: `cook/compare/r01/desktop.jpg`, `cook/compare/r01/mobile.jpg`, `cook/compare/r01/r07-vs-r01.jpg`
 
-Scores, eyeballed: critic median (2 critics: general-purpose default model + sonnet), out of 10
+Scores, eyeballed: 2 fresh critics (general-purpose default model + sonnet), mean of 2, out of 10
 
 | Shot | Layout | Color | Type | Detail | Mascot | Playful |
 |---|---|---|---|---|---|---|
-| S01 landing | 7 | 7 | 8 | 6.8 | 7.5 | 7.5 |
-| S03 wizard | 6.8 | 6.8 | 7.8 | 6.3 | 6.8 | 6.8 |
-| S04 today | 7.3 | 7.3 | 7.5 | 7 | 6.5 | 7.3 |
-| S06 week | 6.3 | 7.8 | 6.3 | 6.3 | 4 | 7.3 |
-| S07 meal | 6 | 7.3 | 7.5 | 5.8 | 6 | 6.5 |
-| S02 landing mobile | 6.3 | 6.3 | 7.8 | 6 | 4.5 | 6.3 |
-| S05 today mobile | 6.5 | 7.3 | 7.5 | 6.3 | 6.3 | 7 |
-| S07 mascot fidelity | - | 9 | - | 9 | 8.8 | 8 |
+| S01 landing | 6.5 | 7 | 7 | 6 | 8 | 7 |
+| S03 wizard | 6 | 7 | 6 | 5 | 6.5 | 7 |
+| S04 today | 7 | 7.5 | 6 | 7.5 | 6 | 6.5 |
+| S06 week | 6.5 | 7 | 5.5 | 7 | 6 | 6 |
+| S07 meal | 5.5 | 7 | 6.5 | 5.5 | 5 | 6 |
+| S09 login | 4.5 | 6.5 | 6 | 3.5 | 5.5 | 5.5 |
+| S10 register | 4 | 6.5 | 6 | 3.5 | 5.5 | 5.5 |
+| S02 landing mobile | 5.5 | 6 | 7 | 3.5 | 7 | 5.5 |
+| S05 today mobile | 6 | 7 | 6 | 6.5 | 5.5 | 6 |
+| S07m meal mobile | 5 | 7 | 6.5 | 4.5 | 5 | 6 |
+| S09m login mobile | 6 | 6.5 | 6.5 | 4 | 5.5 | 5.5 |
 
-Own score (logged, never decides): about 7.
+Critics scored login/register AFTER the AuthStage change (the bare card was never scored).
+Spread of 2 on 6 cells (S01 detail, S06 detail, S03 color, S03 playful, S07 mascot, S07m mascot); a third critic was not run because of the cap.
+One critic said the reference halves are hard to compare: R03 (Slush) is reused for 4 rows, and the phone refs shrink to a thin strip in a 960x540 cell. Both scored against the general "strong reference = 9" bar.
+Own score (logged, never decides): about 6.5.
 
 Measured (command and result):
-- vitest: 25/25 pass.
-- axe-core wcag2a+aa on 9 screens: 0 violations.
-- horizontal scroll at 375px: none on landing, today, week, plan.
-- console errors during harness run: 0 (after fixing scrollTo Promise crash).
+- node scripts/stills.mjs 01 http://localhost:5175: axe-core wcag2a+aa 0 violations on 13 screens; no horizontal scroll at 375px on landing, today, week, plan, login; 0 console errors.
+- npm test: 58/58 pass. npm run build: ok (JS 169.2 kB gzip, up from 110.1 kB in run 1, from @supabase/supabase-js). oxlint: only only-export-components warnings.
+
+Not checked this round:
+- Real Supabase sign-in flow (stubbed on purpose). Register's username_available check is aborted by the stub, so its "taken" message is not shown in stills.
 
 Top gaps from critics:
-1. Mascot use in UI: one small pose, absent on week, hidden by tab bar on phone hero.
-2. Landing hero: dead white band under CTAs, side art clipped at edges, flat white background.
-3. Week: 7 narrow columns, tiny wrapped text (already rebuilt as rows during round, not yet scored).
-4. Meal page: empty ingredients card (data fixed), hero art small, no action.
-5. Today: "0 day streak" reads wrong on day one; nested borders busy; streak chip wraps on phone; arrows wrap.
+1. S09/S10: band does not fill the fold; white strip below (and above on register). Make the stage fill the viewport height, center the card, add 2 to 3 floating preview stickers (streak chip, meal card) near the mascot.
+2. S05/S07m phone nav: "Start a / streak" and "Log / out" wrap onto two lines (confirmed in `cook/stills/r01/S05-today-mobile.png`). This regression came from the new Log out button. Fix: streak pill becomes icon + count, Log out becomes an icon or menu below sm.
+3. S04/S06 meta text (slot labels, macros, times) is small and soft on pastel; S07 mascot small at the plate rim; S02 phone landing is a bare stack.
 
-Stop check: bar no | floor no | stills approved no | final no -> next round
-Next focus: mascot presence on every page, hero fill, meal page action, streak copy.
+Progress note sent: 11:30
+Stop check: bar no (median about 6 vs 9) | cap reached (round 01) | stills approved no | final no -> STOP, waiting for user.
+Next focus if the user continues: phone nav wrap (regression), auth stage fills the fold + stickers, meta text size/contrast.
 
-## Round 02
+## Round 02 (capped: user said "lanjut ronde 2 dan stop")
 
-Time: 00:45 to 00:53 WITA | total elapsed 0.4h
+Time: 11:27 to 11:29 WITA | total elapsed 0.2h
 Usage: not readable
-Focus: critic round-1 gaps: mascot presence, hero dead space, Today/phone polish.
+Focus: the three round-01 gaps: phone nav wrap (regression), auth stage does not fill the fold, small meta text.
 
 Changes:
-- Landing: hero art anchored to full-width section, pastel blobs, meal band at the bottom of the first screen, equal-width phone CTAs, tab bar hidden on landing.
-- Wizard: icon tiles, check badge on selected option, "Step N of 6", mascot sits on the card corner.
-- Today: rows tinted per meal slot, swap button visible, streak copy "Start a streak!", rest/complete badge on mascot, phone header arrows inline.
-- Week: rebuilt as one row per day + lilac mascot banner. Meal page: mascot by plate, "Mark as eaten", "More ideas" row, muffin data fixed.
+- `src/components/Nav.tsx`: below sm the streak pill shows flame + count only (the full text stays in aria-label and from sm up); Log out and the streak pill get whitespace-nowrap and tighter padding. Proof: `cook/stills/r02/S05-today-mobile.png`, one line.
+- `src/components/AuthStage.tsx`: the stage fills the viewport height on md+ (min-h 100svh minus nav), the band runs to the bottom, the card is centered. The mascot is 320px, with two tilted preview stickers: a "5 day streak" chip and a ticked "Berry Oats 380 kcal" meal card (drawn FoodArt).
+- `src/pages/Today.tsx`, `src/pages/Week.tsx`: meta lines (slot · kcal, minutes and macros, move kind and dose, how-to, week slot labels) go from text-sm (14px) to text-base (16px).
 
-Scores, eyeballed: 2 critics (default + sonnet), spread > 1 on several rows, so round 3 uses 3 critics.
+Stills: `cook/stills/r02/` | Side by side: `cook/compare/r02/desktop.jpg`, `cook/compare/r02/mobile.jpg`, `cook/compare/r02/r01-vs-r02.jpg` (r01 left, r02 right)
+
+Scores, eyeballed: 2 fresh critics (general-purpose default model + sonnet), mean of 2, out of 10
 
 | Shot | Layout | Color | Type | Detail | Mascot | Playful |
 |---|---|---|---|---|---|---|
-| S01 landing | 7.5 | 7.5 | 8.3 | 7 | 8 | 7.8 |
-| S03 wizard | 6.5 | 6.3 | 6.8 | 6.5 | 7.5 | 6.5 |
-| S04 today | 7 | 7.3 | 7 | 6.8 | 6.3 | 7.5 |
-| S06 week | 6.3 | 7 | 6.8 | 6 | 5.3 | 6.3 |
-| S07 meal | 6 | 7.5 | 7 | 5.8 | 4.8 | 6.8 |
-| S02 landing mobile | 7.3 | 6.8 | 7.8 | 6.8 | 6.5 | 6.8 |
-| S05 today mobile | 6.8 | 7.3 | 7.3 | 6.3 | 6.8 | 7.3 |
+| S01 landing | 7 | 7.5 | 7.5 | 6.5 | 8 | 7.5 |
+| S03 wizard | 5.5 | 6.5 | 6.5 | 4.5 | 6 | 6.5 |
+| S04 today | 7 | 7 | 6.5 | 7 | 6 | 6.5 |
+| S06 week | 6.5 | 7 | 6 | 7 | 5.5 | 6 |
+| S07 meal | 6 | 7 | 7 | 5.5 | 5 | 6.5 |
+| S09 login | 5.5 | 6.5 | 6.5 | 4 | 6 | 6 |
+| S10 register | 5.5 | 6.5 | 6.5 | 4 | 6 | 6 |
+| S02 landing mobile | 6 | 4.5 | 7.5 | 4 | 7 | 5 |
+| S05 today mobile | 5.5 | 6.5 | 6.5 | 6 | 5.5 | 5.5 |
+| S07m meal mobile | 6 | 7 | 6.5 | 4.5 | 5 | 5.5 |
+| S09m login mobile | 5.5 | 6 | 6.5 | 4 | 6 | 5 |
 
-Measured: axe 0 violations on 9 screens; no h-scroll at 375px; 0 console errors; vitest 25/25.
+Versus round 01 (different critic runs, rough): S09 layout 4.5 -> 5.5, S10 layout 4 -> 5.5, S09/S10 detail 3.5 -> 4, S09/S10 mascot 5.5 -> 6. S05 layout 6 -> 5.5 (critic A flagged the menu card edge, see gap 1). Wizard and landing were not changed; their moves are critic noise.
+Spread of 2 to 3 on many cells: critic A gave 8 on S01/S04/S06 where critic B gave 5 to 6. A third critic was not run because of the cap.
+Both critics again said the reference column is hard to use (R03 reused, phone refs squashed to a strip). The compare layout for phone refs needs a crop of R04's top (R04-top.png exists) next run.
+Own score (logged, never decides): about 6.5.
 
-Top gaps: system emoji used as main food/exercise art (generic); mascot small on week/meal; week rows box-heavy; phone Today menu below the fold.
-Stop check: bar no | floor no | approved no | final no -> next round
+Measured (command and result):
+- node scripts/stills.mjs 02 http://localhost:5175: axe-core wcag2a+aa 0 violations on 13 screens; no horizontal scroll at 375px on landing, today, week, plan, login; 0 console errors.
+- npm test: 58/58 pass. npm run build: ok (JS 169.4 kB gzip). oxlint: only old warnings (only-export-components, Mascot set-state-in-effect).
 
-## Round 03
+Checked and rejected:
+- Critic A: phone landing shows "Log out" to a visitor. Not a bug: the harness is logged in at that point (S02 is captured after the session is seeded).
 
-Time: 00:53 to 01:00 WITA | total elapsed 0.5h
+Top gaps from critics:
+1. S05/S07m phone: the Daily menu card and the meal hero card run past the right edge (the right border is missing in `cook/stills/r02/S05-today-mobile.png`; same in r01, so it predates this run). Keep the cards inside the 16px gutter.
+2. S03 wizard (now weakest by critic B): a small card in a big pastel field, generic blobs, small mascot. Bigger card, bigger mascot reacting, themed props instead of blobs.
+3. S07/S07m meal hero: small food art on a flat slab, mascot half hidden; S02 phone landing is a bare stack (no preview card, no color behind the mascot).
+
+Progress note sent: 11:29
+Stop check: bar no (median about 6 vs 9) | cap reached (round 02) | stills approved no | final no -> STOP, waiting for user.
+Next focus if the user continues: phone card overflow (S05/S07m), wizard stage, meal hero food art; fix the phone reference crop in the compare sheet.
+
+## Round 03 (capped: user said "lanjut ronde 3, stop setelah ronde 3")
+
+Time: 11:31 to 11:36 WITA | total elapsed 0.2h
 Usage: not readable
-Focus: weakest per critics = system emoji as main art; mascot small on week/meal; phone Today order.
+Focus: the three round-02 gaps: phone card overflow (S05), wizard stage (S03), meal hero food art (S07/S07m).
 
 Changes:
-- src/components/FoodArt.tsx: 18 flat food drawings (bowl, jar, glass, wrap, toast, stack, muffin, sandwich, taco, sushi, pizza, noodles, egg, apple, banana, berry, handful, plate) picked by meal name, ink outline like the mascot. Contact sheet: cook/stills/art-sheet.png (dev route /#/_art).
-- src/components/MoveArt.tsx: 13 exercise drawings mapped by move id.
-- Today: stats as icon rows, bigger water cups, phone order menu-first with progress strip. Week: lighter rows, bigger mascot banner, "Soon" for future days. Meal: tinted card headers. Landing: colored feature cards with mascot peek, outlined blobs, hero capped at 780px.
-- vite base './' (dist served from any subfolder; still needs a server, file:// blocks module scripts: checked, renders blank).
+- `src/pages/Today.tsx`: the main grid gets `grid-cols-1`. Cause: the phone grid had one implicit `auto` column, so the nowrap meta line ("Breakfast · 320 kcal" + Done badge) pushed the Daily menu card past the right edge. Proof: `cook/stills/r03/S05-today-mobile.png`, right border back inside the gutter.
+- `src/pages/Wizard.tsx`: the generic butter circle and pink squircle are gone. In their place (xl only, side gutters) sit a tilted breakfast plate (drawn FoodArt), a "Daily streaks" sticker, a "7-day menu" sticker and a tilted dumbbell plate (MoveArt). Mascot 220 -> 260px. First try used the jump-rope art; it read as a smiley face, so it was swapped for the dumbbell.
+- `src/components/Bits.tsx`: hero Plate (size >= 160) draws the food at 70% of the disc (was 60%), rim ring 72% (was 66%). Fills the plate on meal pages.
+- `src/pages/MealPage.tsx`: hero plate 260 -> 300px desktop, 170 -> 190px phone; mascot 170 -> 180px, phone scale 0.7 -> 0.75.
 
-Scores, eyeballed: 3 critics (default, sonnet, haiku), median
+Stills: `cook/stills/r03/` | Side by side: `cook/compare/r03/desktop.jpg`, `cook/compare/r03/mobile.jpg` (phone refs now use `R04-top.png`), `cook/compare/r03/r02-vs-r03.jpg` (r02 left, r03 right)
 
-| Shot | Layout | Color | Type | Detail | Mascot | Playful |
-|---|---|---|---|---|---|---|
-| S01 landing | 7 | 8 | 8 | 7 | 8 | 8 |
-| S03 wizard | 7 | 7 | 7 | 7 | 8 | 7 |
-| S04 today | 8 | 8 | 7 | 8 | 6 | 8 |
-| S06 week | 7 | 8 | 7 | 8 | 7 | 8 |
-| S07 meal | 7 | 8 | 7 | 6.5 | 7 | 7 |
-| S02 landing mobile | 6 | 7 | 8 | 6 | 6.5 | 7 |
-| S05 today mobile | 6 | 8 | 7 | 7 | 5 | 7 |
-
-Measured: axe 0 violations; no h-scroll at 375px; 0 console errors; vitest 25/25; npm run build ok (JS 108.6 kB gzip).
-Top gaps: mascot is an avatar on app screens; phone hero mascot below fold; phone meal names wrap 3 lines; wizard emoji icons; header CTA differs per page.
-Stop check: bar no | floor no | approved no | final no -> next round
-
-## Round 04
-
-Time: 01:00 to 01:03 WITA | total elapsed 0.55h
-Focus: mascot as avatar on app screens (3/3 critics), phone hero mascot below fold, phone meal names wrapping.
-Changes: Today mascot card 176px breaking out of the card; phone progress strip with full mascot + cheer line; phone swap moved under the title; phone stats card; landing phone mascot above headline; week banner mascot 180px; meal mascot peeks from behind plate; done rows dimmed; nav shows streak chip on app pages; week workout chips + "+N more"; wizard tiles use drawn icons (new 'sofa' drawing).
-
-Scores, eyeballed: 3 critics, median
+Scores, eyeballed: 2 fresh critics (general-purpose default model + sonnet), mean of 2, out of 10
 
 | Shot | Layout | Color | Type | Detail | Mascot | Playful |
 |---|---|---|---|---|---|---|
-| S01 landing | 7 | 8 | 8 | 6 | 8 | 8 |
-| S03 wizard | 6 | 7 | 7 | 6 | 7 | 7 |
-| S04 today | 7 | 7 | 7 | 7 | 7 | 7 |
-| S06 week | 7 | 8 | 7 | 7 | 7 | 8 |
-| S07 meal | 6 | 8 | 7 | 6 | 5 | 7 |
-| S02 landing mobile | 7 | 7 | 8 | 6 | 8 | 7 |
-| S05 today mobile | 7 | 8 | 7 | 7 | 7 | 8 |
+| S01 landing | 8 | 7.5 | 8.5 | 8 | 8.5 | 8 |
+| S03 wizard | 6.8 | 8 | 7.5 | 6.8 | 7.5 | 7.8 |
+| S04 today | 7.5 | 8 | 7.5 | 8.3 | 7 | 7.3 |
+| S06 week | 7.5 | 8 | 7.5 | 7.5 | 7.3 | 7.3 |
+| S07 meal | 7 | 8 | 8.3 | 6.8 | 6 | 7 |
+| S09 login | 6 | 7 | 7.5 | 5 | 6.3 | 6.8 |
+| S02 landing mobile | 6.5 | 6 | 7.8 | 4.8 | 7.5 | 5.8 |
+| S05 today mobile | 7.3 | 7.5 | 7.5 | 7.5 | 6.5 | 7.3 |
+| S07m meal mobile | 7 | 7.5 | 7.8 | 6.3 | 5.8 | 6.5 |
+| S09m login mobile | 5.8 | 6.5 | 7.5 | 5 | 5.3 | 6 |
 
-Note: scores plateau around 7. Critics read downscaled 960px cells; several "8px text" claims are artifacts of downscaling (body text is 15 to 17px, measured in CSS).
-Measured: axe 0 violations, no h-scroll, 0 console errors, vitest 25/25.
-Top gaps: repeated bowl art, wizard on empty white canvas, grey secondary text, done rows look disabled.
-
-## Round 05
-
-Time: 01:03 to 01:06 WITA | total elapsed 0.6h
-Focus: round-4 gaps.
-Changes: ink-soft darkened to #4a4058; thicker macro bars, bold macro values; hero plates get a white rimmed plate; wizard pastel stage with outlined shapes, bigger step title and bar; bowl split into soup / salad / rice drawings; done rows keep dark text plus an ink "Done" stamp (white on pink failed axe contrast, fixed).
-Scores: not measured this round (critics not run yet).
-Measured: axe 0 violations on 9 screens, no h-scroll at 375px, 0 console errors, vitest 25/25, build ok.
-Stop check: bar no (median about 7 vs 9) | floor no (0.6h of 8h) | approved no | final no -> waiting on user feedback on stills, then next round
-Next focus: meal page hero composition, landing dead band above marquee, wizard bubble attached to card.
-
-## Round 06 (capped: last round until user says more)
-
-Time: 01:13 to 01:19 WITA | total elapsed 0.8h
-Usage: not readable
-Focus: user-named weak spots from round 05: recipe page hero, dead band above the landing menu band, wizard speech bubble.
-
-Changes:
-- Meal page (src/pages/MealPage.tsx): hero is now one tinted stage card per meal slot (butter/sky/lilac/pink at 45%) with ink border, pop shadow and outlined white shapes like the wizard stage. Plate 260px desktop, 170px phone (two copies, one hidden per breakpoint, because Plate sizes by prop). Mascot flipped to face the plate, leaning on its rim at lower right instead of hiding behind the top-left. Macro tiles 2x2 on phone (4 across from sm), fixes "62 g" wrapping.
-- Landing (src/pages/Landing.tsx): headline 6.75rem on xl (was capped at 6rem), xl bottom padding 80px to 24px, side art moved down (mascot top 9%, cards top 17%). Gap from the sticker to the menu band went from about 120px to about 85px, now close to the top margin (about 75px), so the hero reads centered instead of leaving a dead band.
-- Wizard (src/pages/Wizard.tsx): bubble pulled toward the mascot (tail at the snout), raised to mouth height, text-xl, max-w-lg so it stays on one line. First try (-ml-10) covered the mascot face; fixed in the same round.
-
-Stills: `cook/stills/r06/` | Side by side: `cook/compare/r06/desktop.jpg`, `cook/compare/r06/mobile.jpg`
-
-Scores, eyeballed: 2 critics (general-purpose default model + sonnet), mean of 2, out of 10
-
-| Shot | Layout | Color | Type | Detail | Mascot | Playful |
-|---|---|---|---|---|---|---|
-| S01 landing | 7.5 | 7.5 | 7.5 | 6 | 8 | 7.5 |
-| S03 wizard | 7 | 7 | 6.5 | 6 | 7 | 7 |
-| S04 today | 7 | 7 | 6.5 | 7 | 6 | 6 |
-| S06 week | 6.5 | 6.5 | 6 | 6.5 | 5.5 | 5.5 |
-| S07 meal | 6.5 | 7.5 | 7 | 6.5 | 6 | 6.5 |
-| S02 landing mobile | 7 | 6.5 | 7.5 | 5 | 7 | 6.5 |
-| S05 today mobile | 6 | 7 | 6 | 6.5 | 6 | 6.5 |
-| S07m meal mobile | 6 | 7 | 7 | 5.5 | 6.5 | 6.5 |
-
-Spread > 1.0 on 4 cells (S01 detail 7 vs 5, S07 type 8 vs 6, S07 mascot 7 vs 5, S05 mascot 7 vs 5). Rule says add a third critic; not run because of the 1-round cap.
-S07m was scored on the 260px phone plate; both critics said the plate pushed the title below the fold. Fixed after scoring (170px phone plate, title now above the fold in `cook/stills/r06/S07-meal-mobile.png`). Not re-scored.
-Versus round 04 (last scored round): S07 mascot 5 -> 6, S07 layout 6 -> 6.5, S03 layout 6 -> 7. Different critic runs, so treat as rough.
-
+S10 register was not on the compare sheet this round (same AuthStage as S09, unchanged).
+Versus round 02 (different critic runs, rough, scores ran higher across the board including unchanged shots, so part of the rise is critic noise): S03 detail 4.5 -> 6.8, S03 layout 5.5 -> 6.8, S05 layout 5.5 -> 7.3, S07 detail 5.5 -> 6.8. Unchanged S01 rose about 1, which sets the noise floor.
+Critics agreed within 1 point on most cells; spread 2 on S02 color and S02 playful.
 Own score (logged, never decides): about 7.
 
 Measured (command and result):
-- node scripts/stills.mjs 06: axe-core wcag2a+aa 0 violations on 9 screens; no horizontal scroll at 375px on landing, today, week, plan; 0 console errors.
-- npm test: 25/25 pass. npm run build: ok (JS 109.8 kB gzip). oxlint: only old only-export-components warnings.
+- node scripts/stills.mjs 03 http://localhost:5176: axe-core wcag2a+aa 0 violations on 13 screens; 0 console errors.
+- npm test: 58/58 pass. npm run build: ok (JS 169.5 kB gzip). oxlint: only old only-export-components warnings.
 
-Top gaps from critics (both agree):
-1. Week (S06) is weakest: spreadsheet-like rows, small mascot in a mostly empty banner, thin borders.
-2. Phone bottom tab bar covers content on Today and meal pages; needs bottom padding equal to the bar plus a solid backing.
-3. Tracker screens (S04, S05) read as a dashboard: mascot in a corner card, no stickers. Phone meal meta "Breakfast · 288 kcal" wraps.
-4. Landing: unicorn disc looks pasted on; few doodles around the headline; phone hero has no backdrop blob.
-5. Wizard: hard seam between white top and blue stage; question headline small next to the landing headline.
+Checked and rejected:
+- Both critics: phone bottom tab bar covers the list (S05). The bar is fixed and the page has bottom padding; it covers only what is still scrolled below it. Not a bug.
+- Critic B: streak chip shows 0. Correct for the harness (fresh plan, no full day yet).
 
-Stop check: bar no (median about 6.5 to 7 vs 9) | cap reached (1 round) | stills approved no | final no -> STOP, waiting for user. Round 07 not started.
-Next focus if the user continues: week page rebuild (S06), then phone tab bar padding (S05, S07m).
+Top gaps from critics (both agreed):
+1. S09/S09m login now weakest: small mascot in a big empty pink field, leftover generic circle and squircle (same blobs the wizard lost), phone mascot sits on the white/pink seam. Fix: bigger mascot on a color blob, 2 to 3 more stickers, drop the blobs, phone mascot fully inside the band.
+2. S02 phone landing is a bare stack: none of the desktop hero stickers (Today card, kcal ring, streak tag, meal ticker) reach the phone.
+3. S07/S07m meal: mascot still small and tucked at the plate rim; phone title takes 3 lines and pushes macros and "Mark as eaten" below the fold.
 
-## Round 07 (capped: user said "lanjut ronde 7 lalu stop")
+Progress note sent: 11:36
+Stop check: bar no (median about 7.3 vs 9) | cap reached (round 03) | stills approved no | final no -> STOP, waiting for user.
+Next focus if the user continues: login stage (S09/S09m), phone landing hero stickers (S02), meal hero mascot and phone fold (S07m).
 
-Time: 08:29 to 08:31 WITA by the system clock (resumed after a break) | total elapsed: not tracked across the break
-Focus: carried over from round 06: week page rebuild (S06), phone tab bar (S05, S07m), phone meal meta wrap.
+## Round 04 (capped: user said "Lanjut ronde 4", read as one round)
+
+Time: 12:36 to 12:45 WITA | total elapsed 0.4h
+Usage: not readable
+Focus: the three round-03 gaps: login stage (S09/S09m), phone landing hero (S02), meal mascot and phone fold (S07/S07m).
 
 Changes:
-- Week (src/pages/Week.tsx): every day row now has a full ink border and a small pop shadow (it was ink/25). Today gets the big shadow, a pink ring with an offset, and a tilted "Today" sticker. The day column has an ink divider and a 4xl day name. Meal plates are 52px (were 40), slot labels are text-sm, meal names text-lg. The workout cell is tinted (pink, or lilac on rest days) and its chips are outlined white pills. The banner mascot is 220px and the banner now carries stickers: 7 days / N meals / N workout days.
-- Phone tab bar (src/components/Nav.tsx): the pop shadow now has a second layer, a solid paper band 12px wide, so content scrolling under the bar no longer shows at its edges.
-- Today (src/pages/Today.tsx): "Breakfast · 384 kcal" no longer wraps (whitespace-nowrap).
+- `src/components/AuthStage.tsx`: the corner circle and squircle are gone. A sky disc (340 to 360px) sits behind a bigger mascot (320 -> 360px). New third sticker: a kcal ring card (72%, 1,240 of 1,720). Phone: the band starts right under the nav (no white/pink seam), the stage fills the viewport height, and the mascot (110 -> 120px) sits on a sky disc inside the band.
+- `src/pages/Landing.tsx`: phone and tablet get a sky blob behind the mascot, the "6 day streak" sticker (was hidden below lg) and a small kcal ring card. Desktop unchanged.
+- `src/pages/MealPage.tsx`: mascot 180 -> 220px with a tilted "Yum!" sticker. Phone: plate back to 170px, title text-5xl -> text-4xl, macros in one row of 4. Proof: `cook/stills/r04/S07m-meal-mobile.png` shows title, all 4 macros and "Eaten today" above the tab bar.
 
-Stills: `cook/stills/r07/` | Side by side: `cook/compare/r07/desktop.jpg`, `cook/compare/r07/mobile.jpg` (r06 vs r07); critic images `cook/compare/r07/critic-desktop.jpg`, `cook/compare/r07/critic-mobile.jpg`
+Stills: `cook/stills/r04/` | Side by side: `cook/compare/r04/desktop.jpg` (now with S10), `cook/compare/r04/mobile.jpg`, `cook/compare/r04/r03-vs-r04.jpg` (r03 left, r04 right)
 
-Scores, eyeballed: 2 critics (general-purpose default model + sonnet), mean of 2, out of 10, only for the changed shots
+Scores, eyeballed: 2 fresh critics (general-purpose default model + sonnet), mean of 2, out of 10
 
 | Shot | Layout | Color | Type | Detail | Mascot | Playful |
 |---|---|---|---|---|---|---|
-| S06 week | 6.5 | 7 | 6.5 | 5.5 | 6.5 | 5.5 |
-| S04 today | 6.5 | 7 | 6.5 | 5.5 | 6.5 | 5 |
-| S05 today mobile | 6.5 | 7 | 7 | 6 | 5.5 | 5 |
+| S01 landing | 7.5 | 7.5 | 7.8 | 6.8 | 8.3 | 7.5 |
+| S03 wizard | 6.8 | 7.8 | 7.5 | 6.3 | 7.5 | 7.8 |
+| S04 today | 7.3 | 7.8 | 6.5 | 7.8 | 6 | 7 |
+| S06 week | 7.3 | 7.5 | 6.8 | 7.5 | 5.8 | 6.8 |
+| S07 meal | 6.8 | 8 | 7.5 | 6.3 | 7.3 | 7.8 |
+| S09 login | 7.8 | 8 | 7.5 | 6.5 | 8 | 7.8 |
+| S10 register | 7.5 | 7.8 | 7.5 | 6 | 7.5 | 6.8 |
+| S02 landing mobile | 7.3 | 7.3 | 8.3 | 5.8 | 8 | 7.3 |
+| S05 today mobile | 7.5 | 7.8 | 7.3 | 7.5 | 6.3 | 7 |
+| S07m meal mobile | 8 | 8 | 7.5 | 7 | 7.5 | 7.8 |
+| S09m login mobile | 7 | 7.8 | 7.5 | 5.5 | 6.3 | 6.8 |
 
-S06 against round 06: color 6.5 -> 7, type 6 -> 6.5, mascot 5.5 -> 6.5, detail 6.5 -> 5.5, layout and playful flat. These come from different critic runs, so treat them as rough. Other shots were not re-scored.
-Own score (logged, never decides): about 7.
+Versus round 03 (different critic runs, rough): S09 layout 6 -> 7.8, S09 mascot 6.3 -> 8, S09 detail 5 -> 6.5; S02 layout 6.5 -> 7.3, S02 color 6 -> 7.3, S02 playful 5.8 -> 7.3; S07m layout 7 -> 8, S07m mascot 5.8 -> 7.5; S07 mascot 6 -> 7.3. Unchanged S01 fell about 0.5 and S04/S06 type fell about 1 (sonnet critic harsher this run), so that is the noise band.
+Spread of 2 on S10 detail and S06 mascot/type/playful (sonnet lower).
+Own score (logged, never decides): about 7.3.
 
 Measured (command and result):
-- node scripts/stills.mjs 07: axe-core wcag2a+aa 0 violations on 9 screens; no horizontal scroll at 375px on landing, today, week, plan; 0 console errors.
-- npm test: 25/25 pass. npm run build: ok (JS 110.1 kB gzip).
+- node scripts/stills.mjs 04 http://localhost:5176: axe-core wcag2a+aa 0 violations on 13 screens; no horizontal scroll at 375px on landing, today, week, plan, login; 0 console errors.
+- npm test: 58/58 pass. npm run build: ok. oxlint: only old warnings (only-export-components, Mascot set-state-in-effect).
 
-Top gaps from critics (both agree):
-1. No loose art around the layout: the unicorn is the only illustration. The references scatter tilted stickers and doodles over the content edges.
-2. Food icons are small thin line drawings (40 to 52px); they need bigger, filled, chunky food art.
-3. Week grid: long meal names wrap ("Mango Coconut Chia / Pudding") and break the row alignment; the Today cell is cramped. Page headings ("Your week", "Today") are small next to the landing headline.
+Checked and rejected:
+- Critic B: S04/S07 cards "clipped" at the bottom. That is the 900px viewport fold, not a clip.
+- Critic A: S01 Today card cut by the viewport edge. Not seen in `cook/stills/r04/S01-landing.png` at full size; it is the 960px cell crop. Not changed.
 
-Stop check: bar no (median about 6 to 6.5 vs 9) | cap reached (round 07) | stills approved no | final no -> STOP, waiting for user.
-Next focus if the user continues: loose stickers and doodles around app pages, bigger filled food art, no wrapping in week meal names.
+Top gaps from critics:
+1. S04/S06/S05 mascot is a small sticker in a banner or panel (mascot 5.8 to 6.3, now the lowest dimension). Make it bigger, let it break the card edge, hold the ring.
+2. S09 vs S10 use the same stickers ("5 day streak" on a register page). Give register its own props; S09m mascot still small with empty pink below the card.
+3. S03 wizard: tall white strip above the stage; stickers small and few. Run the stage up behind the progress bar, bigger and more props. S07 desktop: empty right side of the hero and leftover white blob shapes.
 
-## Ship (08:38 WITA)
-
-The user approved the round 07 stills ("oke finalkan").
-Final deliverable: the site runs locally (`npm run dev`, http://localhost:5173), plus a final set of screenshots at 2x scale in `cook/stills/rfinal/` (14 PNGs: desktop 2880x1800, phone 750x1624, plus full-page captures).
-Command: SCALE=2 node scripts/stills.mjs final (scripts/stills.mjs now reads an optional SCALE env var).
-Checked: all 14 files open with the expected sizes (sips); axe 0 violations on 9 screens; no horizontal scroll at 375px; 0 console errors; npm run build ok. Spot-checked S01-landing.png by eye.
-Not in the final set: a phone screenshot of the meal page (stills.mjs never captured it; the round 06 one was a manual capture).
-Final scores, eyeballed: about 6 to 7 out of 10 against a bar of 9. The bar was NOT met; the user chose to ship at the cap.
-Open gaps for a later run: bigger filled food art, loose stickers and doodles on app pages, week meal names wrapping, small page headings.
-Stop check: bar no | cap reached | approved yes | final rendered and checked -> SHIPPED. A new /cook run moves cook/ to cook-archive/<date>/.
+Progress note sent: 12:45
+Stop check: bar no (median about 7.5 vs 9) | cap reached (round 04) | stills approved no | final no -> STOP, waiting for user.
+Next focus if the user continues: mascot scale on S04/S05/S06, register props, wizard stage top, meal hero blobs.

@@ -13,7 +13,7 @@ export function Plate({ emoji, art, color, size = 56 }: { emoji?: string; art?: 
       {art ? (size >= 160
         // hero size: a white plate with a rim sits on the colored disc
         ? <span className="grid place-items-center rounded-full border-[2.5px] border-ink bg-paper" style={{ width: size * 0.8, height: size * 0.8 }}>
-            <span className="grid place-items-center rounded-full border-2 border-ink/15" style={{ width: size * 0.66, height: size * 0.66 }}><span style={{ width: size * 0.6, height: size * 0.6 }}>{art}</span></span>
+            <span className="grid place-items-center rounded-full border-2 border-ink/15" style={{ width: size * 0.72, height: size * 0.72 }}><span style={{ width: size * 0.7, height: size * 0.7 }}>{art}</span></span>
           </span>
         : <span style={{ width: size * 0.8, height: size * 0.8 }}>{art}</span>)
         : <span className="grid place-items-center rounded-full bg-paper/70" style={{ width: size * 0.74, height: size * 0.74 }}>{emoji}</span>}
