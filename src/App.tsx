@@ -8,6 +8,7 @@ import Week from './pages/Week'
 import MealPage from './pages/MealPage'
 import Login from './pages/Login'
 import Register from './pages/Register'
+import { PublicOnly, RequireAccount } from './guards'
 import ArtSheet from './pages/ArtSheet'
 
 export default function App() {
@@ -19,13 +20,17 @@ export default function App() {
       <main id="main">
         <Routes>
           <Route path="/" element={<Landing />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-          <Route path="/plan" element={<Wizard />} />
-          <Route path="/today" element={<Today />} />
-          <Route path="/today/:key" element={<Today />} />
-          <Route path="/week" element={<Week />} />
-          <Route path="/meal/:id" element={<MealPage />} />
+          <Route element={<PublicOnly />}>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
+          </Route>
+          <Route element={<RequireAccount />}>
+            <Route path="/plan" element={<Wizard />} />
+            <Route path="/today" element={<Today />} />
+            <Route path="/today/:key" element={<Today />} />
+            <Route path="/week" element={<Week />} />
+            <Route path="/meal/:id" element={<MealPage />} />
+          </Route>
           {import.meta.env.DEV && <Route path="/_art" element={<ArtSheet />} />}
           <Route path="*" element={<Landing />} />
         </Routes>

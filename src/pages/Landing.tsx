@@ -6,6 +6,7 @@ import FoodArt from '../components/FoodArt'
 import Ring from '../components/Ring'
 import { Plate, Swoosh, SLOT_COLOR, DISH, SLOT_LABEL, KIND_COLOR, fmt } from '../components/Bits'
 import { Check, Flame } from '../components/Icons'
+import { useAuth } from '../auth'
 import { generatePlan } from '../lib/plan'
 import { MEALS, MEAL_BY_ID } from '../data/meals'
 import { MOVE_BY_ID } from '../data/exercises'
@@ -50,6 +51,7 @@ const steps = [
 ]
 
 export default function Landing() {
+  const entry = useAuth().account ? '/plan' : '/register'
   return (
     <>
       {/* hero: stacked on phones, two columns on laptops, centered with flanking art on wide screens */}
@@ -70,10 +72,10 @@ export default function Landing() {
               Mira the unicorn builds your 7-day meal plan and daily workouts, then cheers you on while you tick them off.
             </p>
             <div className="mt-8 flex flex-wrap justify-center gap-3 lg:justify-start xl:justify-center">
-              <Link to="/plan" className="btn btn-ink !min-h-14 !px-8 !text-xl max-sm:w-full">Make my free plan</Link>
+              <Link to={entry} className="btn btn-ink !min-h-14 !px-8 !text-xl max-sm:w-full">Make my free plan</Link>
               <a href="#sample" onClick={(e) => { e.preventDefault(); document.getElementById('sample')?.scrollIntoView({ behavior: 'smooth' }) }} className="btn !min-h-14 !px-7 !text-xl max-sm:w-full">See a sample day</a>
             </div>
-            <p className="mt-7"><span className="sticker rotate-[-3deg] bg-sky text-base">No sign-up. Saved on your device.</span></p>
+            <p className="mt-7"><span className="sticker rotate-[-3deg] bg-sky text-base">Free account. Saved to the cloud.</span></p>
           </div>
 
           {/* mascot */}
@@ -198,9 +200,9 @@ export default function Landing() {
             <Mascot size={230} className="shrink-0" />
             <div className="flex-1">
               <h2 className="text-4xl font-bold leading-tight sm:text-5xl">Your first sparkly week starts today</h2>
-              <p className="mt-3 text-lg">Free, no account, and you can remake it any time.</p>
+              <p className="mt-3 text-lg">Free, saved to your account, and you can remake it any time.</p>
             </div>
-            <Link to="/plan" className="btn btn-ink !min-h-14 !px-8 !text-xl">Let&apos;s go</Link>
+            <Link to={entry} className="btn btn-ink !min-h-14 !px-8 !text-xl">Let&apos;s go</Link>
           </div>
         </div>
       </section>

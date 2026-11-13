@@ -1,19 +1,17 @@
 import { useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
 
 const input = 'w-full rounded-2xl border-[2.5px] border-ink px-4 py-3 font-display text-xl font-semibold outline-none focus:shadow-pop'
 const label = 'mb-1.5 block font-display text-lg font-semibold'
 
 export default function Login() {
-  const { account, signIn } = useAuth()
+  const { signIn } = useAuth()
   const [username, setUsername] = useState('')
   const [password, setPassword] = useState('')
   const [show, setShow] = useState(false)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-
-  if (account) return <Navigate to="/plan" replace />
 
   async function submit(e: FormEvent) {
     e.preventDefault()

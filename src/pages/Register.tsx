@@ -1,5 +1,5 @@
 import { useEffect, useState, type FormEvent } from 'react'
-import { Link, Navigate } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import { useAuth } from '../auth'
 import { supabase } from '../lib/supabase'
 import { normalizeUsername, validateUsername } from '../lib/username'
@@ -8,7 +8,7 @@ const input = 'w-full rounded-2xl border-[2.5px] border-ink px-4 py-3 font-displ
 const label = 'mb-1.5 block font-display text-lg font-semibold'
 
 export default function Register() {
-  const { account, signUp } = useAuth()
+  const { signUp } = useAuth()
   const [username, setUsername] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -33,8 +33,6 @@ export default function Register() {
     }, 300)
     return () => { stale = true; clearTimeout(t) }
   }, [username])
-
-  if (account) return <Navigate to="/plan" replace />
 
   async function submit(e: FormEvent) {
     e.preventDefault()
