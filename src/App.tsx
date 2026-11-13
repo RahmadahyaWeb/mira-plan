@@ -6,6 +6,7 @@ import Wizard from './pages/Wizard'
 import Today from './pages/Today'
 import Week from './pages/Week'
 import MealPage from './pages/MealPage'
+import Login from './pages/Login'
 import Register from './pages/Register'
 import ArtSheet from './pages/ArtSheet'
 
@@ -18,6 +19,7 @@ export default function App() {
       <main id="main">
         <Routes>
           <Route path="/" element={<Landing />} />
+          <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/plan" element={<Wizard />} />
           <Route path="/today" element={<Today />} />
