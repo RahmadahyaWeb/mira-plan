@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
+import AuthStage from '../components/AuthStage'
 
 const input = 'w-full rounded-2xl border-[2.5px] border-ink px-4 py-3 font-display text-xl font-semibold outline-none focus:shadow-pop'
 const label = 'mb-1.5 block font-display text-lg font-semibold'
@@ -24,9 +25,9 @@ export default function Login() {
   }
 
   return (
-    <div className="wrap py-10">
-      <form onSubmit={submit} noValidate className="card mx-auto flex w-full max-w-md flex-col gap-5 p-6 sm:p-8">
-        <h1 className="text-4xl font-bold">Welcome back</h1>
+    <AuthStage say="Welcome back! Your plan missed you." tint="bg-pink/35">
+      <form onSubmit={submit} noValidate className="card flex w-full flex-col gap-5 p-6 sm:p-8">
+        <h1 className="text-4xl font-bold sm:text-5xl">Welcome back</h1>
         <div>
           <label htmlFor="l-user" className={label}>Username</label>
           <input id="l-user" className={input} value={username} autoComplete="username" autoCapitalize="none" spellCheck={false}
@@ -46,6 +47,6 @@ export default function Login() {
         <span aria-disabled="true" className="text-center text-base text-ink/50">Forgot password?</span>
         <p className="text-center text-base">New here? <Link to="/register" state={state} className="font-bold underline">Sign up</Link></p>
       </form>
-    </div>
+    </AuthStage>
   )
 }

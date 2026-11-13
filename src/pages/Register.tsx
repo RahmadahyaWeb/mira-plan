@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../auth'
+import AuthStage from '../components/AuthStage'
 import { supabase } from '../lib/supabase'
 import { normalizeUsername, validateUsername } from '../lib/username'
 
@@ -50,9 +51,9 @@ export default function Register() {
   const uErr = username === '' ? show1(userError) : userError
 
   return (
-    <div className="wrap py-10">
-      <form onSubmit={submit} noValidate className="card mx-auto flex w-full max-w-md flex-col gap-5 p-6 sm:p-8">
-        <h1 className="text-4xl font-bold">Make your account</h1>
+    <AuthStage say="Let's make your sparkle plan. It takes a minute." tint="bg-butter/45">
+      <form onSubmit={submit} noValidate className="card flex w-full flex-col gap-5 p-6 sm:p-8">
+        <h1 className="text-4xl font-bold sm:text-5xl">Make your account</h1>
         <div>
           <label htmlFor="r-user" className={label}>Username</label>
           <input id="r-user" className={input} value={username} autoComplete="username" autoCapitalize="none" spellCheck={false}
@@ -78,6 +79,6 @@ export default function Register() {
         <button type="submit" className="btn btn-pink" disabled={busy}>{busy ? 'Creating…' : 'Create account'}</button>
         <p className="text-center text-base">Already have an account? <Link to="/login" state={state} className="font-bold underline">Log in</Link></p>
       </form>
-    </div>
+    </AuthStage>
   )
 }

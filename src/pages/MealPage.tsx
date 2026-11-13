@@ -34,12 +34,13 @@ export default function MealPage() {
       <div className={`relative isolate mt-6 grid gap-8 overflow-hidden rounded-[2rem] border-[2.5px] border-ink p-6 shadow-pop sm:p-10 md:grid-cols-[auto_1fr] md:items-center ${STAGE[m.slot]}`}>
         <svg viewBox="0 0 200 200" className="absolute -bottom-24 -left-20 -z-10 hidden w-80 text-paper md:block" aria-hidden="true"><circle cx="100" cy="100" r="90" fill="currentColor" stroke="var(--color-ink)" strokeWidth="1.2" /></svg>
         <svg viewBox="0 0 200 200" className="absolute -bottom-36 -right-20 -z-10 hidden w-64 text-paper md:block" aria-hidden="true"><rect x="20" y="20" width="160" height="160" rx="50" fill="currentColor" stroke="var(--color-ink)" strokeWidth="1.2" transform="rotate(14 100 100)" /></svg>
-        <div className="relative mx-auto pb-2 pr-20 sm:pb-4 sm:pr-24">
+        <div className="relative mx-auto pb-2 pr-20 sm:pb-4 sm:pr-32">
           {/* Plate sizes by prop, so phones get a smaller copy to keep the title above the fold */}
           <div className="rounded-full shadow-pop sm:hidden"><Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={170} /></div>
-          <div className="rounded-full shadow-pop max-sm:hidden"><Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={260} /></div>
+          <div className="rounded-full shadow-pop max-sm:hidden"><Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={300} /></div>
           {/* mascot leans in toward the plate */}
-          <Mascot size={170} flip hopKey={eaten} className="absolute -bottom-1 right-0 origin-bottom-right max-sm:scale-[0.7]" />
+          <Mascot size={220} flip hopKey={eaten} className="absolute -bottom-2 -right-2 origin-bottom-right max-sm:scale-[0.65]" />
+          <span className="sticker absolute right-0 top-2 rotate-[8deg] bg-paper text-lg sm:right-4 sm:top-6 sm:text-xl" aria-hidden="true">Yum!</span>
         </div>
         <div>
           <div className="flex flex-wrap gap-2">
@@ -47,11 +48,11 @@ export default function MealPage() {
             <span className="chip"><Clock />{m.minutes} min</span>
             <span className="chip">{DIET_LABEL[m.diet]}</span>
           </div>
-          <h1 className="mt-4 text-5xl font-bold leading-[1.02] sm:text-6xl">{m.name}</h1>
-          <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <h1 className="mt-4 text-4xl font-bold leading-[1.02] sm:text-6xl">{m.name}</h1>
+          <div className="mt-5 grid grid-cols-4 gap-2 sm:mt-6 sm:gap-3">
             {([['kcal', k(m.kcal), 'bg-butter'], ['protein', `${k(m.protein)} g`, 'bg-pink'], ['carbs', `${k(m.carbs)} g`, 'bg-sky'], ['fat', `${k(m.fat)} g`, 'bg-lilac']] as const).map(([l, v, c]) => (
-              <div key={l} className={`rounded-2xl border-[2.5px] border-ink p-3 text-center ${c}`}>
-                <p className="font-display text-2xl font-bold">{v}</p><p className="text-sm font-bold">{l}</p>
+              <div key={l} className={`rounded-2xl border-[2.5px] border-ink px-1 py-2 text-center sm:p-3 ${c}`}>
+                <p className="font-display text-lg font-bold sm:text-2xl">{v}</p><p className="text-sm font-bold">{l}</p>
               </div>
             ))}
           </div>

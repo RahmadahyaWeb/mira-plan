@@ -79,9 +79,15 @@ export default function Landing() {
           </div>
 
           {/* mascot */}
-          <div className="pointer-events-none relative mx-auto -mb-2 w-[200px] max-lg:order-first sm:w-[300px] lg:mb-0 lg:w-[380px] xl:absolute xl:right-[max(1rem,calc(50%-45rem))] xl:top-[9%] xl:w-[clamp(360px,28vw,430px)]">
+          <div className="pointer-events-none relative isolate mx-auto -mb-2 w-[200px] max-lg:order-first sm:w-[300px] lg:mb-0 lg:w-[380px] xl:absolute xl:right-[max(1rem,calc(50%-45rem))] xl:top-[9%] xl:w-[clamp(360px,28vw,430px)]">
+            {/* phones and tablets: a sky blob behind the mascot, the side blobs only show from lg */}
+            <Blob className="absolute -inset-[14%] -z-10 text-sky lg:hidden" />
             <Mascot fluid bob />
-            <span className="sticker absolute bottom-[6%] left-[2%] rotate-[-4deg] bg-butter text-base max-lg:hidden sm:text-lg"><Flame className="mr-1 inline size-5 text-pink-deep" />6 day streak</span>
+            <span className="sticker absolute bottom-[6%] left-[2%] rotate-[-4deg] bg-butter text-base max-sm:-left-12 sm:text-lg"><Flame className="mr-1 inline size-5 text-pink-deep" />6 day streak</span>
+            <span className="card absolute -right-14 top-[14%] flex rotate-[6deg] items-center gap-2 p-1.5 pr-3 text-left lg:hidden" aria-hidden="true">
+              <Ring value={0.72} size={40} stroke={7}><span className="text-[10px] font-bold">72%</span></Ring>
+              <span className="leading-tight"><span className="block font-display font-bold">1,240</span><span className="text-xs font-bold text-ink-soft">kcal</span></span>
+            </span>
           </div>
 
           {/* left floating tracker cards, wide screens only */}

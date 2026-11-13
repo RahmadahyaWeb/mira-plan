@@ -39,12 +39,12 @@ export default function Nav() {
             {account ? (
               <>
                 {state.plan && !onLanding && (
-                  <Link to="/today" className="btn !min-h-11 !px-4 !text-base bg-butter" aria-label={`${streakN} day streak, open today`}>
-                    <Flame className="size-5 text-pink-deep" />{streakN ? `${streakN} day streak` : 'Start a streak'}
+                  <Link to="/today" className="btn !min-h-11 !px-3 sm:!px-4 !text-base bg-butter whitespace-nowrap" aria-label={`${streakN} day streak, open today`}>
+                    <Flame className="size-5 text-pink-deep" /><span className="sm:hidden">{streakN}</span><span className="hidden sm:inline">{streakN ? `${streakN} day streak` : 'Start a streak'}</span>
                   </Link>
                 )}
                 <span className="hidden font-display text-lg font-semibold sm:inline">{account.username}</span>
-                <button type="button" onClick={signOut} className="btn !min-h-11 !px-4 !text-base">Log out</button>
+                <button type="button" onClick={signOut} className="btn !min-h-11 !px-3 sm:!px-4 !text-base whitespace-nowrap">Log out</button>
               </>
             ) : (
               <>

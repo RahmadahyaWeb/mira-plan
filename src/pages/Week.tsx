@@ -76,7 +76,7 @@ export default function Week() {
                       <li key={j} className="flex min-w-0 items-center gap-2.5">
                         <Plate art={<FoodArt meal={m} dish={DISH[m.slot]} />} color={SLOT_COLOR[m.slot]} size={52} />
                         <span className="min-w-0 leading-tight">
-                          <span className="block text-sm font-bold capitalize text-ink-soft">{m.slot}</span>
+                          <span className="block text-base font-bold capitalize text-ink-soft">{m.slot}</span>
                           <span className="block text-lg font-semibold">{m.name}</span>
                         </span>
                       </li>
